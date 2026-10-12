@@ -1,0 +1,3316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FBF7F2">
+<meta name="color-scheme" content="light">
+<title>慢慢来 · 习惯打卡</title>
+<style>
+/* ---------- 基础 ---------- */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  /* ── Warm Apple palette ──
+     The app keeps its own warm tint; the hairlines, radii, materials and motion become
+     the system's, so the surfaces read as Apple's rather than as a flat web page. */
+  --bg:#FBF7F2; --card:#FFFFFF; --ink:#3A322B; --soft:#8B8078;
+  --accent:#F2936B; --accent-d:#DE7A50; --accent-soft:#FFEDE2;
+  --mint:#4FAE86; --mint-soft:#E7F3ED; --line:rgba(150,120,95,.18);
+  --danger:#D98080; --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(150,110,80,.10);
+  /* Materials + motion, shared with the rest of the suite. */
+  --material:rgba(255,255,255,.75); --material-thick:rgba(255,255,255,.9);
+  --blur:saturate(180%) blur(20px);
+  --radius:14px; --radius-lg:20px; --radius-pill:999px;
+  /* The spec's shadow is one wide 4%-opacity diffusion; the warm whisper keeps it sitting
+     in this page's warm frame rather than on a neutral one. */
+  --shadow:0 4px 24px rgba(0,0,0,.04),0 1px 2px rgba(150,110,80,.06);
+  --shadow-md:0 6px 32px rgba(0,0,0,.07),0 1px 2px rgba(150,110,80,.06);
+  --shadow-lg:0 16px 56px rgba(40,25,15,.14);
+  --ring:0 0 0 4px rgba(242,147,107,.28);
+  --ease-apple:cubic-bezier(.25,.1,.25,1);
+  --ease-spring:cubic-bezier(.34,1.4,.64,1);
+}
+html,body{margin:0;padding:0;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg); color:var(--ink); line-height:1.5;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility; padding-bottom:100px;
+}
+::selection{background:rgba(242,147,107,.28);color:var(--ink)}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 16px 8px}
+h2,h3,h4{margin:0}
+
+/* ---------- 头部 ---------- */
+.app-head{padding:4px 2px 14px}
+.app-head h1{font-size:22px;font-weight:700;letter-spacing:.4px;margin-bottom:6px}
+.app-head p{margin:0;font-size:13px;color:var(--soft)}
+
+/* ---------- 标签栏 ---------- */
+.tabs{display:flex;gap:8px;margin:0 0 16px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;font-family:inherit;font-size:14px;color:var(--soft);background:#fff;
+  border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;transition:all .2s}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(242,147,107,.3)}
+
+/* ---------- 卡片列表（按频率分栏 → 每组内部响应式多列网格） ---------- */
+#list{display:block}
+.grid{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+.group{animation:rise .32s ease}
+.group+.group{margin-top:26px}
+.group-head{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);
+  margin:0 0 13px;padding:0 2px 11px;border-bottom:1px solid var(--line)}
+.group-head .g-ico{font-size:15px;line-height:1}
+.group-head .g-n{margin-left:auto;font-size:11.5px;font-weight:500;color:var(--soft);
+  background:#F4EEE8;border-radius:999px;padding:3px 10px}
+.card{background:var(--card);border:1px solid #FBF3EC;border-radius:20px;padding:16px;
+  box-shadow:var(--shadow);animation:rise .3s ease}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card-top>div{flex:1;min-width:0}
+.card-title{font-size:17px;font-weight:600;word-break:break-word;cursor:text}
+.card-title:hover{color:var(--accent-d)}
+.drag-handle{flex:0 0 auto;width:24px;padding:2px 0;margin-top:1px;background:none;border:none;
+  color:#CDBCAB;font-size:17px;line-height:1;cursor:grab;touch-action:none;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+.drag-handle:hover{color:var(--accent);background:#FBF3EC}
+.drag-handle:active{cursor:grabbing}
+.card.dragging{opacity:.55;box-shadow:0 14px 30px rgba(196,160,128,.28)}
+/* ---------- 双击改名 ---------- */
+.rename-box{margin:0}
+.rename-input{width:100%;font-family:inherit;font-size:17px;font-weight:600;color:var(--ink);
+  background:#FBF7F3;border:1px solid var(--accent);border-radius:12px;padding:8px 10px;outline:none}
+.rename-hint{font-size:11.5px;color:var(--soft);margin-top:6px}
+.card-meta{font-size:12px;color:var(--soft);margin-top:5px}
+.badge{flex:0 0 auto;font-size:11px;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.b-active{background:var(--mint-soft);color:#4E8A6C}
+.b-done{background:var(--accent-soft);color:#C4652F}
+.b-up{background:#F2F0EA;color:#8A8175}
+.b-exp{background:#F7EDE9;color:#A97F72}
+.b-round{background:#EFE9FB;color:#7A5CC0}
+.card-top>.card-side{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+
+/* ---------- 难度星级 & 奖励 ---------- */
+.stars{display:flex;align-items:center;gap:2px;font-family:inherit;font-size:13px;line-height:1;
+  color:#EFAE45;background:#FFF8EC;border:1px solid #F6E6C9;border-radius:999px;padding:4px 9px;
+  cursor:pointer;white-space:nowrap;transition:border-color .16s}
+.stars:hover{border-color:#EBCF9E}
+.stars .off{color:#E4D8C8}
+.reward-sum{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+.sum-item{flex:1 1 0;min-width:140px;display:flex;align-items:center;gap:11px;background:#fff;
+  border:1px solid #FBF3EC;border-radius:16px;padding:11px 15px;box-shadow:var(--shadow);
+  font-family:inherit;text-align:left;color:inherit;cursor:pointer;
+  transition:border-color .16s,box-shadow .16s,transform .12s}
+.sum-item:hover{border-color:#F3D9C7;box-shadow:0 8px 22px rgba(196,160,128,.18)}
+.sum-item:active{transform:scale(.985)}
+.sum-arrow{margin-left:auto;font-size:20px;line-height:1;color:#CDBCAB}
+.sum-item .s-ico{font-size:19px;line-height:1}
+.sum-item .s-body{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.sum-item .s-body b{font-size:17px;color:var(--accent-d)}
+.sum-item .s-body em{font-style:normal;font-size:11.5px;color:var(--soft)}
+.money-box{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:linear-gradient(135deg,#FFF6E6,#FDEBF3);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+.money-box .lbl{font-size:13px;color:#B98A6B}
+.money-box .amt{font-size:20px;font-weight:700;color:#C4652F}
+.starpick{display:flex;align-items:center;gap:4px}
+.starbtn{background:none;border:none;font-family:inherit;font-size:31px;line-height:1;color:#E4D8C8;
+  cursor:pointer;padding:2px 4px;transition:transform .12s,color .16s}
+.starbtn.on{color:#EFAE45}
+.starbtn:active{transform:scale(.88)}
+.star-hint{font-size:12px;color:#B98A6B;margin-top:10px}
+
+/* ---------- 进度 ---------- */
+.progress{margin-top:15px}
+.progress-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--soft);margin-bottom:8px}
+.progress-head b{color:var(--accent-d);font-size:15px;font-weight:700}
+.bar{height:10px;border-radius:999px;background:#F6EDE5;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#FFC7A8,#F2936B);
+  transition:width .5s cubic-bezier(.2,.9,.3,1)}
+.bar-fill.done{background:linear-gradient(90deg,#A9D8BF,#7FB69B)}
+.bar-fill.long{background:linear-gradient(90deg,#F6C79A,#EEA86B,#F6C79A);background-size:200% 100%;
+  animation:endlessBar 4s linear infinite}
+@keyframes endlessBar{from{background-position:0 0}to{background-position:-200% 0}}
+
+/* ---------- 今日操作区 ---------- */
+.today{margin-top:15px}
+.hint{background:#FBF7F2;color:#9A8B7D;font-size:13px;border-radius:14px;padding:12px 14px}
+.checked-pill{display:flex;align-items:center;gap:8px;background:var(--mint-soft);color:#3F7A5D;
+  border-radius:14px;padding:12px 14px;font-size:14px;font-weight:500}
+.checked-pill .t{margin-left:auto;font-size:12px;opacity:.75;font-weight:400}
+.note-preview{margin-top:9px;padding-left:10px;border-left:3px solid var(--line);
+  font-size:13px;color:var(--soft);word-break:break-word}
+.reward-box{background:linear-gradient(135deg,#FFF3E9,#FDEBF3);border-radius:16px;padding:15px;margin-bottom:10px}
+.reward-label{font-size:12px;color:#B98A6B;margin-bottom:6px}
+.reward-text{font-size:16px;font-weight:600;color:#8A5A3B;word-break:break-word}
+.rest-tip{background:var(--mint-soft);color:#3F7A5D;border-radius:14px;padding:12px 14px;font-size:13.5px}
+
+/* ---------- 按钮 ---------- */
+.btn{font-family:inherit;font-size:15px;border:none;border-radius:14px;padding:12px 16px;cursor:pointer;
+  transition:transform .12s ease,filter .2s ease}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 5px 14px rgba(242,147,107,.32)}
+.btn.ghost{background:#F6F1EC;color:var(--ink)}
+.btn.wide{width:100%;padding:14px}
+.actions{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:12px;align-items:center}
+.txt-btn{background:none;border:none;font-family:inherit;font-size:13px;color:var(--soft);
+  padding:6px 0;cursor:pointer;text-decoration:underline dotted rgba(154,139,125,.6);text-underline-offset:3px}
+.txt-btn.dg{color:var(--danger)}
+
+/* ---------- 卡面底部操作区：查看记录（左）+ 更多「···」（右） ---------- */
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.rec-link{display:inline-flex;align-items:center;gap:5px;background:none;border:none;
+  font-family:inherit;font-size:13px;color:var(--accent-d);cursor:pointer;padding:3px 2px;
+  text-decoration:underline dotted rgba(222,122,80,.5);text-underline-offset:3px}
+.rec-link .arr{font-size:13px;line-height:1;transition:transform .2s}
+.rec-link.open .arr{transform:rotate(90deg)}
+.more-btn{flex:0 0 auto;width:30px;height:30px;border-radius:10px;border:1px solid var(--line);
+  background:#FBF7F3;color:var(--soft);font-family:inherit;font-size:16px;font-weight:700;line-height:1;
+  letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.more-btn:hover{color:var(--accent-d);border-color:#EBCF9E;background:#FFF6EF}
+
+/* ---------- 每天记录 ---------- */
+.history{margin-top:15px;border-top:1px dashed var(--line);padding-top:14px;animation:rise .25s ease}
+.history h4{font-size:12.5px;font-weight:500;color:var(--soft);margin-bottom:11px}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:7px}
+.day{border:1px solid var(--line);background:#FAF5F0;border-radius:12px;padding:7px 2px;
+  text-align:center;cursor:pointer;font-family:inherit;color:inherit;line-height:1.3;transition:transform .12s}
+.day:active{transform:scale(.94)}
+.day .n{display:block;font-size:12px;font-weight:600}
+.day .w{display:block;font-size:10px;color:var(--soft);margin-top:1px}
+.day.on{background:var(--mint);border-color:var(--mint)}
+.day.on .n,.day.on .w{color:#fff}
+.day.on .w{font-size:12px;font-weight:700}
+.day.today{outline:2px solid var(--accent);outline-offset:1px}
+.day.future{opacity:.42;cursor:not-allowed}
+.notes{margin-top:14px}
+.note-item{display:flex;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px dashed #F4EDE6;word-break:break-word}
+.note-item:last-child{border-bottom:none}
+.note-item .d{flex:0 0 auto;color:var(--soft);font-size:11.5px;padding-top:2px;white-space:nowrap}
+.note-item.skip-note .d{color:#B98A6B}
+
+/* ---------- 跳过周 ---------- */
+.day.skip{background:#F2F0EA;border-style:dashed;cursor:default}
+.day.skip .n,.day.skip .w{color:#A99F92}
+.day.skip .w{font-size:11px}
+.history .day.skip{cursor:pointer}
+.day.skip.hasnote{background:#FBF1E6;border-color:#E8D6C1}
+.day.skip.hasnote .n::after{content:" 📝"}
+.skip-list{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;margin-top:2px}
+.skip-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#FBF7F3}
+.skip-row.off{background:#F4F1EC;border-style:dashed}
+.skip-info{display:flex;flex-direction:column;line-height:1.35;min-width:0}
+.skip-info b{font-size:14px;font-weight:600}
+.skip-info span{font-size:12px;color:var(--soft)}
+.skip-info em{font-style:normal;font-size:11.5px;color:#4E8A6C}
+.skip-row.off .skip-info em{color:#A99F92}
+.skip-row .dchip{padding:8px 12px;font-size:13px;flex:0 0 auto}
+.skip-info .skip-why{font-size:11.5px;color:#B98A6B;margin-top:3px;word-break:break-word}
+.skip-info .skip-why.empty{color:#C3B6A9}
+.skip-btns{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+.skip-btns .dchip{padding:7px 12px}
+/* 高亮「今天」这一行：柔和的橙调描边 + 浅底，一眼可辨 */
+.skip-row.today{border-color:var(--accent);background:var(--accent-soft);
+  box-shadow:0 0 0 2px rgba(242,147,107,.16)}
+.skip-row.today.off{background:#FDF3EC}
+.skip-row.today .skip-info b{color:var(--accent-d)}
+.skip-today-tag{display:inline-block;margin-left:7px;font-size:10.5px;font-weight:700;color:#fff;
+  background:var(--accent);border-radius:999px;padding:1px 8px;vertical-align:middle;line-height:1.7}
+
+/* ---------- 组合打卡（Routine / 清单） ---------- */
+.checklist{display:flex;flex-direction:column;gap:7px}
+.cli{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font-family:inherit;
+  font-size:14.5px;color:var(--ink);background:#FBF7F3;border:1px solid var(--line);
+  border-radius:14px;padding:11px 13px;cursor:pointer;transition:background .16s,border-color .16s}
+.cli:active{transform:scale(.985)}
+.cli .box{flex:0 0 auto;width:20px;height:20px;border-radius:7px;border:1.6px solid #DCCDBE;
+  display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;line-height:1;
+  transition:background .16s,border-color .16s}
+.cli .t{min-width:0;word-break:break-word}
+.cli.on{background:var(--mint-soft);border-color:#BFE3CE}
+.cli.on .box{background:var(--mint);border-color:var(--mint)}
+.cli.on .t{color:#3F7A5D}
+.cli-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;
+  color:var(--soft);margin-bottom:9px}
+.cli-head b{color:var(--accent-d);font-size:15px;font-weight:700}
+.item-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.item-row input{flex:1;min-width:0}
+.item-del{flex:0 0 auto;width:40px;height:44px;border:1px solid var(--line);background:#FBF7F3;color:#B9A99A;
+  border-radius:12px;font-family:inherit;font-size:14px;cursor:pointer;line-height:1}
+.item-del:hover{color:var(--danger);border-color:#EED7CE}
+.item-add{width:100%;font-family:inherit;font-size:13.5px;color:var(--accent-d);background:#FBF7F3;
+  border:1px dashed var(--line);border-radius:12px;padding:11px;cursor:pointer;margin-top:2px}
+.item-count{font-size:11.5px;color:var(--soft);margin-top:7px}
+/* ---------- 组合清单：子项拖拽排序 ---------- */
+.cli-wrap{display:flex;align-items:center;gap:6px}
+.cli-wrap .cli{flex:1;min-width:0}
+.cli-drag{flex:0 0 auto;width:28px;height:38px;background:none;border:none;font-family:inherit;
+  color:#CDBCAB;font-size:15px;line-height:1;cursor:grab;touch-action:none;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+.cli-drag:hover{color:var(--accent);background:#FBF3EC}
+.cli-drag:active{cursor:grabbing}
+.item-row .cli-drag{height:44px}
+.item-dragging{opacity:.55;box-shadow:0 12px 26px rgba(196,160,128,.25)}
+
+/* ---------- 明细弹层（奖励 / 已完成任务） ---------- */
+.detail-list{display:flex;flex-direction:column;gap:9px}
+.detail-row{display:flex;align-items:flex-start;gap:12px;background:#FBF7F3;border:1px solid var(--line);
+  border-radius:14px;padding:12px 13px}
+.detail-main{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.detail-main b{font-size:14.5px;font-weight:600;word-break:break-word}
+.detail-main em{font-style:normal;font-size:12px;color:var(--soft)}
+.detail-gift{font-size:12.5px;color:#B98A6B;word-break:break-word}
+.detail-amt{flex:0 0 auto;font-size:16px;font-weight:700;color:#C4652F;white-space:nowrap}
+
+/* ---------- 轮次记录（同一习惯的多次进行） ---------- */
+.round-list{display:flex;flex-direction:column;gap:12px}
+.round-block{border:1px solid var(--line);border-radius:16px;padding:13px 13px 15px;background:#FBF7F3}
+.round-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.round-head b{font-size:15px;font-weight:600}
+.round-meta{font-size:12px;color:var(--soft);margin-bottom:10px;line-height:1.6}
+.round-days .day{cursor:default}
+.round-days .day:active{transform:none}
+
+/* ---------- 空状态 / 页脚 ---------- */
+.empty{grid-column:1/-1;text-align:center;padding:46px 20px;color:var(--soft);font-size:14px}
+.empty .e{font-size:42px;display:block;margin-bottom:12px}
+.footer{text-align:center;color:#C3B6A9;font-size:12px;padding:14px 0 4px}
+.footer .link{background:none;border:none;font-family:inherit;font-size:12px;color:#B0A193;
+  text-decoration:underline;cursor:pointer;padding:6px}
+
+/* ---------- 弹层 ---------- */
+.overlay{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;
+  background:rgba(74,63,53,.42);animation:fade .2s ease}
+.overlay.show{display:flex}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:#fff;
+  border-radius:22px 22px 0 0;padding:22px 18px calc(24px + env(safe-area-inset-bottom));
+  animation:sheet .28s cubic-bezier(.2,.9,.3,1)}
+@keyframes sheet{from{transform:translateY(26px);opacity:.5}to{transform:none;opacity:1}}
+.modal h2{font-size:19px;font-weight:700}
+.modal-sub{margin:5px 0 18px;font-size:13px;color:var(--soft);word-break:break-word}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--soft);margin-bottom:7px}
+input[type=text],input[type=date],input[type=number],textarea{
+  width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:#FBF7F3;
+  border:1px solid var(--line);border-radius:14px;padding:12px 13px;outline:none;-webkit-appearance:none}
+input:focus,textarea:focus{border-color:var(--accent);background:#fff}
+textarea{min-height:92px;resize:vertical;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.dchip{font-family:inherit;font-size:14px;color:var(--soft);background:#FBF7F3;border:1px solid var(--line);
+  border-radius:999px;padding:10px 15px;cursor:pointer;transition:all .18s}
+.dchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions .btn{flex:1}
+
+/* ---------- 「更多」菜单（低频/管理功能收纳） ---------- */
+.menu-list{display:flex;flex-direction:column;gap:8px}
+.menu-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;
+  font-size:14.5px;color:var(--ink);background:#FBF7F3;border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;cursor:pointer;transition:all .18s}
+.menu-item:hover{background:#FFF6EF;border-color:#EBCF9E}
+.menu-item:active{transform:scale(.99)}
+.menu-item .m-ico{flex:0 0 auto;width:22px;text-align:center;font-size:16px;line-height:1}
+.menu-item .m-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.menu-item .m-txt em{font-style:normal;font-size:11.5px;color:var(--soft);margin-top:2px}
+.menu-item .m-arr{flex:0 0 auto;color:#CDBCAB;font-size:15px}
+.menu-item.dg{color:var(--danger);background:#FDF5F5;border-color:#F0D9D9}
+.menu-item.dg .m-arr{color:var(--danger)}
+
+/* ---------- 庆祝 ---------- */
+.celebrate{text-align:center}
+.big-emoji{font-size:54px;line-height:1.1;animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}65%{transform:scale(1.18)}100%{transform:scale(1)}}
+.celebrate h2{margin-top:8px}
+.celebrate .line{font-size:14px;color:var(--soft);margin:8px 0 16px;line-height:1.7}
+.celebrate .reward-box{margin:0 0 12px}
+#confetti{position:fixed;inset:0;width:100%;height:100%;z-index:60;pointer-events:none}
+
+/* ---------- 打卡瞬时反馈：粒子爆破 / 卡片弹跳 ---------- */
+/* 爆破画布叠在弹层之上（overlay 为 50），保证在弹层淡出时粒子依然可见 */
+#burst{position:fixed;inset:0;width:100%;height:100%;z-index:65;pointer-events:none}
+/* 「已打卡」状态胶囊：出现时轻微上浮 + 淡入，让状态切换更顺滑 */
+.checked-pill{animation:pillIn .4s cubic-bezier(.2,.9,.3,1)}
+@keyframes pillIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+/* 卡片弹跳（老旧浏览器不支持 Web Animations 时的兜底） */
+@keyframes cardPulse{0%{transform:scale(1)}32%{transform:scale(1.035)}66%{transform:scale(.992)}100%{transform:scale(1)}}
+.card.pulse{animation:cardPulse .6s cubic-bezier(.2,.9,.3,1.2)}
+
+/* ---------- 底部按钮 & 提示 ---------- */
+.add-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,249,244,0) 0%,var(--bg) 45%)}
+.add-bar .btn{width:100%;max-width:528px;padding:15px;font-size:16px;border-radius:16px;pointer-events:auto}
+.toast{position:fixed;left:50%;bottom:104px;z-index:70;max-width:78vw;text-align:center;
+  background:rgba(74,63,53,.93);color:#fff;font-size:13.5px;padding:11px 18px;border-radius:999px;
+  opacity:0;transform:translate(-50%,10px);transition:all .26s ease;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- 桌面微调 ---------- */
+@media (min-width:600px){
+  .overlay{align-items:center;padding:22px}
+  .modal{border-radius:22px;padding-bottom:24px}
+}
+
+/* ---------- 响应式多列网格：手机 1 列 / 平板 2 列 / 大屏最多 3 列 ---------- */
+@media (min-width:700px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (min-width:1040px){ .grid{grid-template-columns:repeat(3,1fr)} }
+
+/* ════════════════════════════════════════════════════════════════════
+   APPLE HIG POLISH
+   The chrome, controls and materials, drawn the way the system draws them — the warm
+   tint stays, everything around it becomes the system's. Appended last, so where a
+   rule here speaks it wins; it never touches a size a media query depends on.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay scrollbars: thin, rounded, floating in a transparent gutter ── */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(120,95,70,.28);background-clip:content-box;border:3px solid transparent;border-radius:var(--radius-pill)}
+::-webkit-scrollbar-thumb:hover{background:rgba(120,95,70,.45);background-clip:content-box}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ── Cards: one radius, one hairline, one shadow, one gentle hover ──
+   Hover lifts a single pixel and leans on the shadow, the way the system says
+   "this is a surface" without the card jumping off the page. */
+.card{border-color:rgba(150,120,95,.12);border-radius:var(--radius-lg);box-shadow:var(--shadow);
+  transition:box-shadow .28s var(--ease-apple),transform .28s var(--ease-apple),border-color .28s var(--ease-apple)}
+.card:hover{transform:translateY(-1px);border-color:rgba(150,120,95,.2);
+  box-shadow:0 2px 6px rgba(0,0,0,.05),0 12px 32px rgba(150,110,80,.14)}
+.rename-input{background:rgba(150,120,95,.05);border-radius:var(--radius);box-shadow:var(--ring);
+  transition:border-color .18s var(--ease-apple),box-shadow .18s var(--ease-apple)}
+.drag-handle,.cli-drag{border-radius:9px;transition:background .18s var(--ease-apple),color .18s var(--ease-apple)}
+
+/* ── Tabs: pills on a hairline, filled with the tint when selected ── */
+.tab{border-color:var(--line);
+  transition:background .22s var(--ease-apple),border-color .22s var(--ease-apple),color .22s var(--ease-apple),box-shadow .22s var(--ease-apple),transform .15s var(--ease-apple)}
+.tab:active{transform:scale(.96)}
+.tab.on{border-color:transparent;box-shadow:0 1px 2px rgba(0,0,0,.06),0 5px 16px rgba(242,147,107,.3)}
+
+/* ── Buttons: capsules with a real press state ── */
+.btn{border-radius:var(--radius-pill);font-weight:500;letter-spacing:-.01em;-webkit-tap-highlight-color:transparent;
+  transition:background .18s var(--ease-apple),filter .18s var(--ease-apple),box-shadow .18s var(--ease-apple),transform .15s var(--ease-apple)}
+.btn.primary{box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 16px rgba(242,147,107,.32)}
+.btn.primary:hover{background:var(--accent-d)}
+.btn.primary:active{filter:saturate(1.05) brightness(.96)}
+.btn.ghost{background:rgba(150,120,95,.08);color:var(--ink)}
+.btn.ghost:hover{background:rgba(150,120,95,.14)}
+.item-del{border-radius:var(--radius);background:rgba(150,120,95,.06);
+  transition:color .18s var(--ease-apple),border-color .18s var(--ease-apple),background .18s var(--ease-apple)}
+.item-add{border-radius:var(--radius);background:rgba(150,120,95,.05);
+  transition:background .18s var(--ease-apple),border-color .18s var(--ease-apple)}
+
+/* ── Fields: system text fields, with the soft tinted focus halo ── */
+input[type=text],input[type=date],input[type=number],textarea{
+  border-radius:var(--radius);background:rgba(150,120,95,.05);box-shadow:inset 0 1px 2px rgba(0,0,0,.03);
+  transition:border-color .18s var(--ease-apple),box-shadow .18s var(--ease-apple),background .18s var(--ease-apple)}
+input[type=text]:focus,input[type=date]:focus,input[type=number]:focus,textarea:focus{
+  border-color:var(--accent);background:#fff;box-shadow:var(--ring)}
+
+/* ── Chips and pill groups ── */
+.dchip{border-radius:var(--radius-pill);
+  transition:background .18s var(--ease-apple),border-color .18s var(--ease-apple),color .18s var(--ease-apple),transform .15s var(--ease-apple)}
+.dchip:active{transform:scale(.96)}
+.dchip.on{border-color:transparent;box-shadow:0 1px 2px rgba(0,0,0,.06),0 4px 12px rgba(242,147,107,.28)}
+
+/* ── List rows: hairline groupings on a translucent warm well ── */
+.day{border-radius:var(--radius);background:rgba(150,120,95,.05);
+  transition:background .18s var(--ease-apple),border-color .18s var(--ease-apple),transform .15s var(--ease-apple)}
+.day:not(.future):hover{border-color:rgba(242,147,107,.5)}
+.day.skip,.day.skip.hasnote{background:rgba(150,120,95,.09)}
+.cli,.detail-row,.skip-row,.round-block{border-color:rgba(150,120,95,.12);background:rgba(150,120,95,.045)}
+.cli{border-radius:var(--radius);transition:background .18s var(--ease-apple),border-color .18s var(--ease-apple)}
+.cli:hover{background:rgba(150,120,95,.08)}
+.skip-row,.detail-row{border-radius:var(--radius)}
+.round-block,.sum-item,.money-box{border-radius:var(--radius-lg)}
+.bar{background:rgba(150,120,95,.12)}
+.bar-fill{transition:width .55s var(--ease-apple)}
+.stars{border-radius:var(--radius-pill);transition:border-color .18s var(--ease-apple),background .18s var(--ease-apple)}
+.badge{border-radius:var(--radius-pill)}
+.footer,.footer .link{color:var(--soft)}
+
+/* ── Sheets: a material panel over a blurred, dimmed page ── */
+.overlay{background:rgba(40,33,27,.34);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px)}
+.modal{background:var(--material-thick);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  animation:sheet .42s var(--ease-spring)}
+.modal h2{letter-spacing:-.02em}
+/* The bottom sheet gets iOS's grabber; a centred desktop dialog goes without one. */
+@media (max-width:599px){
+  .modal{box-shadow:0 -8px 40px rgba(60,40,25,.18)}
+  .modal::before{content:"";position:sticky;top:0;z-index:5;display:block;width:36px;height:5px;
+    margin:-10px auto 12px;border-radius:var(--radius-pill);background:rgba(120,100,80,.26)}
+}
+@media (min-width:600px){ .modal{box-shadow:0 24px 60px rgba(40,25,15,.24)} }
+
+/* ── The bottom action bar: a vibrancy material, so content fades into it ──
+   The stops mirror --bg (#FBF7F2); they are literal because a token cannot be
+   faded to transparent through rgba(). */
+.add-bar{background:linear-gradient(180deg,rgba(251,247,242,0) 0%,rgba(251,247,242,.88) 45%,#FBF7F2 100%);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.add-bar .btn{border-radius:var(--radius-pill);box-shadow:0 2px 6px rgba(0,0,0,.06),0 10px 26px rgba(242,147,107,.34)}
+.toast{background:rgba(48,40,34,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  font-weight:500;box-shadow:0 10px 30px rgba(60,40,25,.24)}
+
+/* ── Keyboard users still get a visible focus ring ── */
+button:focus-visible{outline:2.5px solid rgba(242,147,107,.55);outline-offset:2px}
+
+/* ── Motion is decoration: stop when the system asks for less ── */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ── SPEC LOCK: the leftover numbers ──
+   The polish layer above already draws the system's chrome. This last pass only tunes what
+   the base rules still hand-picked: every container takes a token radius instead of a
+   hand-typed 12–16px, the card and sheet shadows become the spec's wide low-opacity
+   diffusions, and a button presses on the 0.2s ease the brief asks for. Appended last, so
+   where the two disagree this one wins. The warm tint, the reward tower and the capsule
+   tab/chip/dchip pills are deliberately left exactly as they are. */
+.card{border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+.card:hover{box-shadow:var(--shadow-md);border-color:rgba(150,120,95,.2)}
+.money-box,.sum-item,.reward-box,.round-block{border-radius:var(--radius-lg)}
+.hint,.rest-tip,.cli,.detail-row,.skip-row,.day,.item,.add-bar .btn{border-radius:var(--radius)}
+.modal{box-shadow:var(--shadow-lg)}
+.btn{transition:all .2s ease}
+.btn:active{transform:scale(.98)}
+.btn.primary{box-shadow:0 1px 2px rgba(0,0,0,.05),0 5px 16px rgba(242,147,107,.26)}
+
+/* ══════════════════════════════════════════════════════════════
+   游戏化（Gamification）层
+   · 连胜 Combo：<3 天显示「打卡 X 天」；3 / 5 / 7 / 9 火焰逐级变旺，≥11 紫焰
+   · 大满贯之日：当天所有「按天」任务都打上卡 → 金黄底色 + 小皇冠
+   · 完美通关宝箱：今日进行中任务全部完成 → 顶部宝箱可开
+   全部为纯叠加样式，不改动既有版式；prefers-reduced-motion 下会被上面的
+   全局规则统一降级为「无动画」。 */
+
+/* ---------- 连胜徽章（进度条右侧） ---------- */
+.ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.ph-count{font-style:normal;font-size:11px;color:#C3B6A9}
+.combo{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;
+  line-height:1;border-radius:999px;padding:4px 10px;white-space:nowrap;
+  background:#F4EEE8;color:#9A8B7D;transition:background .2s var(--ease-apple),
+  color .2s var(--ease-apple),box-shadow .2s var(--ease-apple)}
+.combo .c-ico{font-size:13px;line-height:1}
+.combo.lv1{background:#FFF0E2;color:#E07B39;box-shadow:inset 0 0 0 1px #FBDCC0}
+.combo.lv2{background:#FFE6DE;color:#D9483B;box-shadow:inset 0 0 0 1px #F6C6BA;
+  animation:comboFloat 1.7s ease-in-out infinite}
+.combo.lv3{background:#FFE1DC;color:#CE3B33;box-shadow:inset 0 0 0 1px #F4C3BB;
+  animation:comboFloat 1.7s ease-in-out infinite}
+.combo.lv4{background:#FFD9E0;color:#C0284E;box-shadow:inset 0 0 0 1px #F3C0CC;
+  animation:comboFloat 1.7s ease-in-out infinite}
+.combo.lv5{background:linear-gradient(135deg,#EFE3FF,#F9EDFF);color:#7A4BC9;
+  box-shadow:inset 0 0 0 1px #DFCBF7;animation:comboFloat 1.7s ease-in-out infinite}
+@keyframes comboFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+
+/* ---------- 大满贯之日：绿色 → 金黄 ---------- */
+.day.perfect{position:relative}
+.day.on.perfect{background:linear-gradient(135deg,#FFE9A8,#EFAE45);border-color:#E4A02F;
+  box-shadow:0 3px 12px rgba(239,174,69,.42)}
+.day.on.perfect .n,.day.on.perfect .w{color:#6E4400}
+.day.perfect::after{content:"👑";position:absolute;top:-7px;right:-5px;font-size:11px;line-height:1;
+  pointer-events:none;filter:drop-shadow(0 1px 1px rgba(160,110,20,.35))}
+
+/* ---------- 今日完美通关宝箱（页头下方常驻条） ---------- */
+.chest-bar{display:flex;align-items:center;gap:11px;width:100%;margin-top:15px;padding:11px 15px;
+  border-radius:16px;border:1px solid #FBF3EC;background:#fff;box-shadow:var(--shadow);
+  font-family:inherit;font-size:13px;text-align:left;color:inherit}
+.chest-bar .cb-ico{flex:0 0 auto;font-size:22px;line-height:1}
+.chest-bar .cb-body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.chest-bar .cb-body b{font-size:13.5px;font-weight:600;color:var(--ink)}
+.chest-bar .cb-body em{font-style:normal;font-size:11.5px;color:var(--soft);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chest-bar .cb-arrow{margin-left:auto;font-size:20px;line-height:1;color:#CDBCAB}
+.chest-bar .cb-mini{display:block;height:5px;border-radius:999px;background:#F1E8DF;
+  overflow:hidden;margin-top:3px}
+.chest-bar .cb-mini i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,#FFD79A,#F2936B);transition:width .45s var(--ease-apple)}
+.chest-bar.ready{border-color:#F3D9C7;cursor:pointer;
+  background:linear-gradient(135deg,#FFF6E9,#FDEBF3);animation:chestBreathe 2s ease-in-out infinite}
+.chest-bar.ready:hover{box-shadow:0 8px 22px rgba(196,160,128,.2)}
+.chest-bar.ready .cb-body b{color:#C4652F}
+.chest-bar.ready .cb-ico{animation:chestShake 1.6s ease-in-out infinite}
+.chest-bar.done{background:linear-gradient(135deg,#FFF8E4,#FDF0D6);border-color:#F2DFAF}
+@keyframes chestBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes chestShake{0%,70%,100%{transform:rotate(0)}
+  74%{transform:rotate(-11deg)}78%{transform:rotate(9deg)}
+  82%{transform:rotate(-7deg)}86%{transform:rotate(5deg)}90%{transform:rotate(-3deg)}}
+
+/* ---------- 打卡按钮按压缩放（Juicy press） ---------- */
+@keyframes pressPop{0%{transform:scale(1)}32%{transform:scale(.9)}
+  66%{transform:scale(1.045)}100%{transform:scale(1)}}
+.press-pop{animation:pressPop .36s cubic-bezier(.2,.9,.3,1.35)}
+
+/* ---------- 开箱弹层 ---------- */
+.chest-modal{text-align:center}
+.chest-modal .big-emoji{font-size:52px;line-height:1;display:block;
+  animation:chestPop .62s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes chestPop{0%{transform:scale(.4) rotate(-12deg);opacity:0}
+  60%{transform:scale(1.14) rotate(5deg);opacity:1}100%{transform:scale(1)}}
+.chest-modal .praise{margin:14px 0 6px;font-size:16.5px;font-weight:700;color:#C4652F;line-height:1.65}
+.chest-modal .praise-sub{margin:0;font-size:12.5px;color:var(--soft);line-height:1.7}
+.chest-tally{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 4px;
+  background:linear-gradient(135deg,#FFF6E6,#FDEBF3);border-radius:16px;padding:13px 16px}
+.chest-tally .lbl{font-size:12.5px;color:#B98A6B}
+.chest-tally .amt{font-size:18px;font-weight:700;color:#C4652F}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<canvas id="burst"></canvas>
+
+<div class="wrap">
+  <header class="app-head">
+    <h1>慢慢来 · 习惯打卡</h1>
+    <p>不逼自己，慢慢养成好习惯 🌱</p>
+    <div class="reward-sum" id="rewardSum"></div>
+    <div id="chestBar"></div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-tab="active">进行中</button>
+    <button class="tab" data-tab="closed">已结束</button>
+    <button class="tab" data-tab="all">全部</button>
+  </nav>
+
+  <main id="list"></main>
+
+  <footer class="footer">
+    <button class="link" id="exportBtn">导出备份</button>
+    <span>·</span>
+    <button class="link" id="importBtn">导入备份</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <div style="margin-top:6px">所有记录只保存在这台设备的浏览器里 💛</div>
+  </footer>
+</div>
+
+<div class="add-bar">
+  <button class="btn primary" id="addBtn">＋ 新建打卡任务</button>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+(function () {
+  'use strict';
+
+  /* ==================== 常量 & 小工具 ==================== */
+  var KEY = 'warm-habit-tracker-v1';
+  var RENAME_MAX = 5;          // 每个任务最多可修改名称的次数
+  var DURATION_MAX = 3;        // 每个任务最多可调整总周期（天数/周数）的次数
+  var ITEM_MAX = 12;           // 组合打卡：每个卡片最多可包含的子项数量
+  var ITEM_MIN = 2;            // 组合打卡：至少需要几个子项
+  var STAR_MIN = 1;            // 难度系数：最低 1 星
+  var STAR_MAX = 3;            // 难度系数：最高 3 星
+  var STAR_AMOUNT = 10;        // 每 1 颗星对应的完成奖励金额
+  var CUR = '$';               // 奖励金额符号
+  var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  var $ = function (sel) { return document.querySelector(sel); };
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function toStr(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function todayStr() { return toStr(new Date()); }
+  function parse(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function addDays(s, n) { var d = parse(s); d.setDate(d.getDate() + n); return toStr(d); }
+  function diffDays(a, b) { return Math.round((parse(b) - parse(a)) / 86400000); }
+  function cnDate(s) { var d = parse(s); return (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
+  function cnShort(s) { var d = parse(s); return (d.getMonth() + 1) + '/' + d.getDate(); }
+  function cnWeek(s) { return WEEK[parse(s).getDay()]; }
+  function cnDateFull(s) { return cnDate(s) + ' ' + cnWeek(s); }
+  function cnTime(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  var ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ESC_MAP[c];
+    });
+  }
+  function uid() {
+    return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ==================== 数据层（localStorage） ==================== */
+  var state = { tasks: [], chests: {} };
+  var uiTab = 'active';        // active | closed | all
+  var expanded = {};           // { taskId: true } 是否展开「每天记录」
+
+  // 校验并规整一批任务数据（首次加载 / 导入备份共用）
+  function adoptTasks(list) {
+    state.tasks = (Array.isArray(list) ? list : [])
+      .filter(function (t) { return t && t.name && t.startDate; });
+    state.tasks.forEach(normalizeTask);
+    ensureOrder();
+  }
+
+  /* 开箱记录：{ 'YYYY-MM-DD': { praise: '赞美语', at: ISO时间 } }
+     每天最多开一次，用来判断「今日宝箱是否已领取」。 */
+  function normalizeChests(src) {
+    var out = {};
+    if (!src || typeof src !== 'object') return out;
+    Object.keys(src).forEach(function (d) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+      var v = src[d];
+      if (v && typeof v === 'object' && typeof v.praise === 'string' && v.praise) {
+        out[d] = { praise: v.praise, at: typeof v.at === 'string' ? v.at : '' };
+      }
+    });
+    return out;
+  }
+
+  function load() {
+    var raw = null;
+    try { raw = localStorage.getItem(KEY); } catch (e) { /* 隐私模式等，忽略 */ }
+    var list = [], chests = {};
+    if (raw) {
+      try {
+        var data = JSON.parse(raw);
+        if (data && Array.isArray(data.tasks)) list = data.tasks;
+        if (data && data.chests) chests = data.chests;
+      } catch (e) { console.warn('本地数据解析失败，已忽略', e); }
+    }
+    adoptTasks(list);
+    state.chests = normalizeChests(chests);
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        version: 1, tasks: state.tasks, chests: state.chests
+      }));
+    } catch (e) {
+      toast('本地保存失败，请检查浏览器存储权限');
+    }
+  }
+
+  /* ==================== 任务计算 ==================== */
+  function isWeekly(t) { return t.mode === 'weekly'; }
+  function isMonthly(t) { return t.mode === 'monthly'; }
+  // 非「按天」频率（按周 / 按月）：每个自然周期只有一个固定打卡日
+  function isPeriodic(t) { return isWeekly(t) || isMonthly(t); }
+  function unitWord(t) { return isWeekly(t) ? '周' : (isMonthly(t) ? '月' : '天'); }
+  // 按周模式下：从开始日起，第一个匹配指定星期(0=周日 … 6=周六)的日期（即第 1 个日历周）
+  function firstWeekdayOnOrAfter(startDate, weekday) {
+    var shift = (weekday - parse(startDate).getDay() + 7) % 7;
+    return addDays(startDate, shift);
+  }
+  // 某年某月（monthIdx：0 起）的天数
+  function daysInMonth(year, monthIdx) { return new Date(year, monthIdx + 1, 0).getDate(); }
+  // 以 baseStr 所在月份为基准、偏移 offset 个月后，取「该月第 day 天」的日期；
+  // 若该月没有这一天（如 2 月没有 31 号），自动顺延为该月最后一天。
+  function monthDateIn(baseStr, offset, day) {
+    var b = parse(baseStr);
+    var y = b.getFullYear(), m = b.getMonth() + offset;
+    return toStr(new Date(y, m, Math.min(day, daysInMonth(y, m))));
+  }
+  // 某日期所在月份的最后一天
+  function lastDayOfMonth(s) {
+    var d = parse(s);
+    return toStr(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+  }
+  // 按月模式下：从开始日起，第一个匹配「每月某号」的日期（即第 1 个月的打卡日）
+  function firstMonthDayOnOrAfter(startDate, day) {
+    var cur = monthDateIn(startDate, 0, day);
+    if (cur < startDate) cur = monthDateIn(startDate, 1, day);   // 本月已过则顺延到下月
+    return cur;
+  }
+  // 第 1 个打卡日：按周=第一个匹配的星期几；按月=第一个匹配的每月日期；按天=开始日
+  function baseAnchor(t) {
+    if (isMonthly(t)) return firstMonthDayOnOrAfter(t.startDate, t.monthDay);
+    if (isWeekly(t)) return firstWeekdayOnOrAfter(t.startDate, t.weekday);
+    return t.startDate;
+  }
+  function skipSetOf(t) {
+    var s = {};
+    (t.skips || []).forEach(function (d) { s[d] = true; });
+    return s;
+  }
+  // 第 k 个周期（尚未考虑跳过）的日期：
+  //   按天=从开始日每 1 天一步；按周=从第 1 个日历周每 7 天一步；按月=从第 1 个月每 1 个自然月一步
+  function sequenceDate(t, k) {
+    if (isMonthly(t)) return monthDateIn(baseAnchor(t), k, t.monthDay);
+    if (isWeekly(t)) return addDays(baseAnchor(t), k * 7);
+    return addDays(t.startDate, k);
+  }
+  // 长期循环任务：只考察到「今天之后的第 1 个周期」为止，避免无限循环
+  function horizonK(t) {
+    var today = todayStr(), k = 0, cap = 3600;
+    while (k < cap && sequenceDate(t, k) <= today) k++;
+    return k + 1;
+  }
+  // 某天（按周时为该周的打卡日、按月时为该月的打卡日）是否被标记为「跳过」
+  function isSkipped(t, date) { return (t.skips || []).indexOf(date) >= 0; }
+  // 某天跳过的原因（可选）
+  function skipNoteOf(t, date) { return (t.skipNotes && t.skipNotes[date]) || ''; }
+  // 未跳过的周期对应的「步进序号 k」（升序）：按天=天数偏移，按周=周数偏移，按月=月数偏移
+  function slotKs(t) {
+    var skip = skipSetOf(t);
+    var need = t.longTerm ? null : t.duration;          // 长期任务不设上限
+    var capK = t.longTerm ? (horizonK(t) + 1) : (t.duration + 1000);
+    var ks = [], k = 0;
+    while (k <= capK) {
+      if (!skip[sequenceDate(t, k)]) {
+        ks.push(k);
+        if (need !== null && ks.length >= need) break;
+      }
+      k++;
+    }
+    return ks;
+  }
+  // 第 i 个打卡日（i 从 0 开始）：第 i 个未跳过的周期
+  function periodDate(t, i) {
+    var ks = slotKs(t);
+    if (!ks.length) return t.startDate;
+    var idx = Math.min(Math.max(i, 0), ks.length - 1);
+    return sequenceDate(t, ks[idx]);
+  }
+  // 全部打卡日
+  function periodsOf(t) {
+    return slotKs(t).map(function (k) { return sequenceDate(t, k); });
+  }
+  // 从第 1 个到最后一个「需要的」周期（含被跳过的），用于历史区与跳过管理
+  function calendarRows(t) {
+    var skip = skipSetOf(t);
+    var need = t.longTerm ? null : t.duration;
+    var capK = t.longTerm ? (horizonK(t) + 1) : (t.duration + 1000);
+    var rows = [], k = 0, got = 0;
+    while (k <= capK) {
+      var d = sequenceDate(t, k);
+      if (skip[d]) {
+        rows.push({ date: d, skipped: true, slotIndex: -1 });
+      } else {
+        rows.push({ date: d, skipped: false, slotIndex: got });
+        got++;
+        if (need !== null && got >= need) break;
+      }
+      k++;
+    }
+    return rows;
+  }
+  // 整个周期的最后一天（按周=最后一周的周日；按月=最后一个月的月末），用于判断「周期已结束」
+  function endDate(t) {
+    if (t.longTerm) return '9999-12-31';                // 长期循环：永不结束
+    var last = periodDate(t, t.duration - 1);
+    if (isMonthly(t)) return lastDayOfMonth(last);
+    return addDays(last, isWeekly(t) ? 6 : 0);
+  }
+  function checkedCount(t) {
+    return periodsOf(t).filter(function (d) { return !!t.checkins[d]; }).length;
+  }
+  function isComplete(t) { return t.longTerm ? false : (checkedCount(t) >= t.duration); }
+  // 该任务最后一次打卡的日期（用于「已完成任务」明细展示）
+  function lastCheckinDate(t) {
+    var ds = Object.keys(t.checkins || {}).sort();
+    return ds.length ? ds[ds.length - 1] : '';
+  }
+
+  /* ---- 难度系数 & 完成奖励 ---- */
+  // 奖励在「完成整个任务（走完所有周期）」时一次性发放 = 难度星级 × 每星金额
+  function starReward(t) { return (t.stars || STAR_MIN) * STAR_AMOUNT; }
+  // 该任务已经拿到的奖励：只有整轮完成才算数，否则为 0
+  function earnedOf(t) { return isComplete(t) ? starReward(t) : 0; }
+  function money(n) { return CUR + n; }
+  // ★★★
+  function starsHTML(n) {
+    var s = '';
+    for (var i = STAR_MIN; i <= STAR_MAX; i++) {
+      s += (i <= n) ? '★' : '<span class="off">★</span>';
+    }
+    return s;
+  }
+  // 星级选择器：按钮组 / 提示文案 / 选中态绘制 / 点击绑定
+  function starButtonsHTML() {
+    var s = '';
+    for (var i = STAR_MIN; i <= STAR_MAX; i++) {
+      s += '<button type="button" class="starbtn" data-star="' + i + '" aria-label="' + i + ' 星">★</button>';
+    }
+    return s;
+  }
+  function starHintText(n) {
+    return '完成整个任务可获得 ' + money(n * STAR_AMOUNT) + ' 奖励（' +
+      n + ' 星 × ' + money(STAR_AMOUNT) + '）';
+  }
+  function paintStarPicker(box, hint, n) {
+    Array.prototype.forEach.call(box.querySelectorAll('.starbtn'), function (b) {
+      b.classList.toggle('on', Number(b.dataset.star) <= n);
+    });
+    hint.textContent = starHintText(n);
+  }
+  function wireStarPicker(box, onChange) {
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('.starbtn');
+      if (!b) return;
+      onChange(Number(b.dataset.star));
+    });
+  }
+  // 预设 + 自定义胶囊按钮的选中态（按 data 属性比对）
+  function paintDchips(box, attr, value, isCustom) {
+    Array.prototype.forEach.call(box.querySelectorAll('.dchip'), function (c) {
+      var v = c.dataset[attr];
+      c.classList.toggle('on', (v === 'custom') ? isCustom : (!isCustom && Number(v) === value));
+    });
+  }
+  // 全站累计：已完成任务数 + 已获得奖励总额
+  function rewardSummary() {
+    var total = 0, done = 0;
+    state.tasks.forEach(function (t) {
+      var got = earnedOf(t);
+      if (got > 0) { done += 1; total += got; }
+    });
+    return { total: total, done: done };
+  }
+  function statusOf(t) {
+    var today = todayStr();
+    if (!t.longTerm && isComplete(t)) return 'done';   // 长期循环任务永不「完成」
+    if (today < periodDate(t, 0)) return 'upcoming';
+    if (!t.longTerm && today > endDate(t)) return 'expired';
+    return 'active';
+  }
+  // 当前周期序号（从 1 开始）：数到今天为止已到达的打卡日（已跳过的周期不计入）
+  function currentPeriodNo(t) {
+    var slots = periodsOf(t), n = 0, today = todayStr();
+    for (var i = 0; i < slots.length; i++) { if (slots[i] <= today) n = i + 1; }
+    if (t.longTerm) return Math.max(n, 1);             // 长期循环不封顶
+    return Math.min(Math.max(n, 1), t.duration);
+  }
+  var STATUS_RANK = { active: 0, upcoming: 1, done: 2, expired: 3 };
+  function rank(t) { return STATUS_RANK[statusOf(t)]; }
+  // 某个任务是否属于指定标签页（进行中 / 已结束 / 全部）
+  function inTab(t, tab) {
+    var s = statusOf(t);
+    if (tab === 'active') return s === 'active' || s === 'upcoming';
+    if (tab === 'closed') return s === 'done' || s === 'expired';
+    return true;
+  }
+  function findTask(id) {
+    for (var i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === id) return state.tasks[i];
+    return null;
+  }
+
+  /* ---- 轮次（同一习惯的多次进行）----
+     用 seriesId 把「再来一轮」新建的卡片和原卡片关联成同一系列：
+     · 有 seriesId 的按它归组；没有的以自身 id 视为独立一轮（兼容旧数据，无需迁移）。
+     · roundNo 记录这是该系列的第几轮（从 1 开始）。 */
+  function sid() { return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function seriesIdOf(t) { return t.seriesId || t.id; }
+  // 同一系列的全部轮次：按轮次号 / 创建时间升序（第 1 轮在前）
+  function seriesTasks(t) {
+    var gid = seriesIdOf(t);
+    return state.tasks.filter(function (x) { return seriesIdOf(x) === gid; })
+      .sort(function (a, b) {
+        return (a.roundNo || 1) - (b.roundNo || 1) ||
+          String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+      });
+  }
+  function maxRoundNoOf(gid) {
+    var m = 0;
+    state.tasks.forEach(function (x) { if (seriesIdOf(x) === gid) m = Math.max(m, x.roundNo || 1); });
+    return m;
+  }
+
+  /* ==================== 组合打卡（Routine / 多项清单） ====================
+     卡片内含多个子项，只有当天（按周则为该周的打卡日）所有子项都被勾选，
+     这一天才算打卡成功。checkins 仍是「某天是否完成」的唯一来源，
+     由子项勾选状态自动同步，因此进度条 / 连续庆祝 / 历史记录全部复用。
+  ===================================================================== */
+  function isComposite(t) { return t.type === 'composite' && (t.items || []).length > 0; }
+  function itemDone(t, date, itemId) {
+    var m = t.itemLog && t.itemLog[date];
+    return !!(m && m[itemId]);
+  }
+  // 某天已勾选的子项数
+  function doneItems(t, date) {
+    var m = (t.itemLog && t.itemLog[date]) || {};
+    var n = 0;
+    (t.items || []).forEach(function (it) { if (m[it.id]) n++; });
+    return n;
+  }
+  // 某天是否所有子项都已勾选
+  function dayAllDone(t, date) {
+    var items = t.items || [];
+    if (!items.length) return !!t.checkins[date];
+    return items.every(function (it) { return itemDone(t, date, it.id); });
+  }
+  // 依子项勾选状态，自动写入 / 移除该天的打卡记录
+  function syncCheckin(t, date) {
+    if (t.type !== 'composite') return;
+    if (dayAllDone(t, date)) {
+      if (!t.checkins[date]) t.checkins[date] = { time: new Date().toISOString(), note: '' };
+    } else if (t.checkins[date]) {
+      delete t.checkins[date];
+    }
+  }
+  // 子项增删 / 改名后：清理失效记录并重算所有日期
+  function resyncComposite(t) {
+    if (t.type !== 'composite') return;
+    var ids = {};
+    (t.items || []).forEach(function (it) { ids[it.id] = true; });
+    var dates = {};
+    Object.keys(t.itemLog || {}).forEach(function (d) { dates[d] = true; });
+    Object.keys(t.checkins || {}).forEach(function (d) { dates[d] = true; });
+    Object.keys(dates).forEach(function (d) {
+      var m = t.itemLog[d];
+      if (m) Object.keys(m).forEach(function (k) { if (!ids[k]) delete m[k]; });
+      syncCheckin(t, d);
+    });
+  }
+  // 勾选 / 取消勾选某个子项（勾完最后一项即自动完成当天打卡）
+  function toggleItem(t, date, itemId, ev) {
+    if (date > todayStr()) { toast('还没到这一天哦，慢慢来～'); return; }
+    var wasComplete = isComplete(t);
+    var dayWas = !!t.checkins[date];
+    if (!t.itemLog) t.itemLog = {};
+    if (!t.itemLog[date]) t.itemLog[date] = {};
+    if (t.itemLog[date][itemId]) delete t.itemLog[date][itemId];
+    else t.itemLog[date][itemId] = true;
+    syncCheckin(t, date);
+    var dayNow = !!t.checkins[date];
+    var nowComplete = isComplete(t);
+    save();
+    render();
+    // 勾完最后一项、当天正式达成的瞬间：喷射粒子 + 卡片弹跳 + 音效
+    if (dayNow && !dayWas) checkinFeedback(t, ev, nowComplete ? 'levelup' : 'checkin');
+    if (!celebrateOnComplete(t, wasComplete, nowComplete) && dayNow && !dayWas) {
+      checkinToast(t, '今日清单全部完成 ✅');
+    }
+  }
+
+  /* ---- 排序 & 数据规整（支持手动拖拽顺序） ---- */
+  function normalizeTask(t) {
+    t.id = t.id || uid();
+    // 轮次：seriesId 关联同系列卡片；roundNo 为第几轮（旧数据缺省为 1、独立成组）
+    t.seriesId = (typeof t.seriesId === 'string' && t.seriesId) ? t.seriesId : null;
+    t.roundNo = Math.max(1, parseInt(t.roundNo, 10) || 1);
+    t.mode = (t.mode === 'weekly' || t.mode === 'monthly') ? t.mode : 'daily';
+    t.weekday = (typeof t.weekday === 'number' && t.weekday >= 0 && t.weekday <= 6)
+      ? t.weekday : parse(t.startDate).getDay();
+    // 按月模式：每月第几号打卡（1~31，缺日自动顺延为当月最后一天）
+    t.monthDay = (function () {
+      var d = parseInt(t.monthDay, 10);
+      if (!(d >= 1 && d <= 31)) d = parse(t.startDate).getDate();
+      return Math.max(1, Math.min(31, d));
+    })();
+    // 长期循环（无限期）：仅「按月」频率支持
+    t.longTerm = (t.mode === 'monthly') && !!t.longTerm;
+    t.skips = Array.isArray(t.skips)
+      ? t.skips.filter(function (s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); })
+      : [];
+    // 跳过的原因（可选）：{ 'YYYY-MM-DD': '为什么跳过' }
+    t.skipNotes = (function () {
+      var src = (t.skipNotes && typeof t.skipNotes === 'object') ? t.skipNotes : {};
+      var out = {};
+      Object.keys(src).forEach(function (d) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d) && typeof src[d] === 'string' && src[d].trim()) {
+          out[d] = src[d].trim().slice(0, 120);
+        }
+      });
+      return out;
+    })();
+    var durMax = t.mode === 'monthly' ? 120 : (t.mode === 'weekly' ? 156 : 365);
+    var durDef = t.mode === 'monthly' ? 12 : (t.mode === 'weekly' ? 8 : 21);
+    t.duration = Math.max(1, Math.min(durMax, parseInt(t.duration, 10) || durDef));
+    t.reward = typeof t.reward === 'string' ? t.reward : '';
+    // 难度系数：1~3 星，旧数据默认 1 星（对应 $10）
+    t.stars = Math.max(STAR_MIN, Math.min(STAR_MAX, parseInt(t.stars, 10) || STAR_MIN));
+    t.checkins = (t.checkins && typeof t.checkins === 'object') ? t.checkins : {};
+    t.celebrated = !!t.celebrated;
+    t.renameCount = Math.max(0, Math.min(RENAME_MAX, parseInt(t.renameCount, 10) || 0));
+    t.durationCount = Math.max(0, Math.min(DURATION_MAX, parseInt(t.durationCount, 10) || 0));
+
+    /* ---- 组合打卡：类型 / 子项 / 每日勾选记录 ---- */
+    t.type = (t.type === 'composite') ? 'composite' : 'single';
+    if (t.type === 'composite') {
+      t.items = (Array.isArray(t.items) ? t.items : []).map(function (it) {
+        if (!it || typeof it !== 'object') return null;
+        return { id: it.id || uid(), name: String(it.name == null ? '' : it.name).trim().slice(0, 20) };
+      }).filter(function (it) { return it && it.name; }).slice(0, ITEM_MAX);
+      t.itemLog = (t.itemLog && typeof t.itemLog === 'object') ? t.itemLog : {};
+      // 子项不足（数据异常）时退化为单项打卡，避免出现无法完成的卡片
+      if (t.items.length < ITEM_MIN) { t.type = 'single'; t.items = []; t.itemLog = {}; }
+    } else {
+      t.items = [];
+      t.itemLog = {};
+    }
+
+    if (typeof t.order !== 'number' || !isFinite(t.order)) t.order = null;
+    resyncComposite(t);   // 依子项勾选状态校正每天的完成记录
+  }
+  function byOrder(a, b) { return (a.order || 0) - (b.order || 0); }
+  function legacySort(a, b) {
+    return rank(a) - rank(b) || String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+  }
+  function ensureOrder() {
+    var need = state.tasks.some(function (t) { return t.order === null; });
+    if (!need) return;
+    // 旧数据升级：按原有规则排一遍并固化顺序，保证升级后卡片位置不跳动
+    state.tasks.slice().sort(legacySort).forEach(function (t, i) { t.order = i; });
+  }
+  function nextOrder() {
+    var m = -1;
+    state.tasks.forEach(function (t) { if (typeof t.order === 'number' && t.order > m) m = t.order; });
+    return m + 1;
+  }
+
+  /* =====================================================================
+     游戏化（Gamification）
+     1) 连胜 Combo —— 连胜 <3 天显示「打卡 X 天」，≥3 天起升级为「🔥 连胜 X 天」
+        档位：3 热血 🔥 / 5、7 烈焰 🔥🔥、🔥🔥🔥 / 9 烈焰 🔥🔥🔥🔥 / ≥11 紫焰 💜
+     2) 大满贯之日 —— 某天所有「按天」任务都打了卡：该天记录底色由绿变金 + 👑
+     3) 完美通关宝箱 —— 今日「进行中」任务全部完成：页头宝箱解锁，开箱得随机赞美
+     ===================================================================== */
+
+  // 连胜档位（从高到低匹配，min 为触发门槛）；< 3 天时不在火焰档位内，徽章走「打卡 X 天」
+  var COMBO_TIERS = [
+    { min: 11, key: 'lv5', icon: '💜',       name: '紫焰连胜' },
+    { min: 9,  key: 'lv4', icon: '🔥🔥🔥🔥', name: '烈焰连胜' },
+    { min: 7,  key: 'lv3', icon: '🔥🔥🔥',   name: '烈焰连胜' },
+    { min: 5,  key: 'lv2', icon: '🔥🔥',     name: '烈焰连胜' },
+    { min: 3,  key: 'lv1', icon: '🔥',       name: '热血连胜' },
+    { min: 1,  key: 'lv0', icon: '',         name: '连胜' }
+  ];
+  function comboInfo(n) {
+    for (var i = 0; i < COMBO_TIERS.length; i++) {
+      if (n >= COMBO_TIERS[i].min) return COMBO_TIERS[i];
+    }
+    return COMBO_TIERS[COMBO_TIERS.length - 1];
+  }
+  // 连胜次数：从「今天（或最近一个已到的打卡日）」往回数连续完成的周期数。
+  // · 被「跳过」的周期视为休息 —— 不计数，也不打断连胜（延续「不逼自己」的基调）
+  // · 今天还没打卡不算断连（一天还没过完，不急着判死刑）
+  function streakOf(t) {
+    var slots = periodsOf(t);
+    if (!slots.length) return 0;
+    var today = todayStr(), i = slots.length - 1;
+    while (i >= 0 && slots[i] > today) i--;          // 只看今天及以前
+    if (i < 0) return 0;
+    var streak = 0;
+    for (; i >= 0; i--) {
+      var d = slots[i];
+      if (isSkipped(t, d)) continue;                 // 休息日：跳过
+      if (t.checkins[d]) { streak++; continue; }     // 完成：+1
+      if (d === today) continue;                     // 今天还没打卡：不断连
+      break;                                         // 真的断了
+    }
+    return streak;
+  }
+  function comboBadgeHTML(t) {
+    var n = streakOf(t), unit = unitWord(t);
+    if (n < 3) {                                   // 火焰未点燃：灰底「打卡 N 天」，不带 🔥
+      var tip0 = n > 0
+        ? '已连续打卡 ' + n + ' ' + unit
+        : '完成一次打卡，连胜从这里开始';
+      return '<span class="combo lv0" title="' + tip0 + '">打卡 ' + n + ' ' + unit + '</span>';
+    }
+    var info = comboInfo(n);                        // n≥3 才升级火焰档位
+    var tip = '已连续完成 ' + n + ' ' + unit + '，保持住！';
+    return '<span class="combo ' + info.key + '" title="' + tip + '">' +
+      '<span class="c-ico">' + info.icon + '</span>连胜 ' + n + ' ' + unit + '</span>';
+  }
+
+  // 大满贯之日：某天所有「按天」任务（当天是正式打卡日、且未被跳过）都已打卡
+  var perfectDayMap = {};
+  function computePerfectDays() {
+    var today = todayStr(), tally = {};
+    state.tasks.forEach(function (t) {
+      if (isPeriodic(t)) return;                     // 只统计「按天」的任务
+      periodsOf(t).forEach(function (d) {
+        if (d > today || isSkipped(t, d)) return;
+        var e = tally[d] || (tally[d] = { total: 0, done: 0 });
+        e.total++;
+        if (t.checkins[d]) e.done++;
+      });
+    });
+    var out = {};
+    Object.keys(tally).forEach(function (d) {
+      if (tally[d].total > 0 && tally[d].done === tally[d].total) out[d] = true;
+    });
+    return out;
+  }
+  function isPerfectDay(d) { return !!perfectDayMap[d]; }
+  function perfectDayCount() { return Object.keys(perfectDayMap).length; }
+
+  // 今日完美通关进度：所有「进行中」任务的「当前周期」是否都已打上卡
+  function todayProgress() {
+    var today = todayStr(), req = 0, done = 0, items = [];
+    state.tasks.forEach(function (t) {
+      if (statusOf(t) !== 'active') return;
+      var d = isPeriodic(t) ? periodDate(t, currentPeriodNo(t) - 1) : today;
+      if (d > today || isSkipped(t, d)) return;      // 还没到打卡日 / 已跳过
+      req++;
+      var ok = !!t.checkins[d];
+      if (ok) done++;
+      items.push({ name: t.name, ok: ok });
+    });
+    return { total: req, done: done, all: req > 0 && done === req, items: items };
+  }
+
+  // 开箱赞美词库（随机抽取）
+  var CHEST_PRAISE = [
+    '你今天战胜了拖延，超厉害！',
+    '全部完成！这份自律正在悄悄改变你 ✨',
+    '看到这份成绩单，未来的你会谢谢你 🌟',
+    '稳稳的满勤，比昨天的自己更好了一点 💛',
+    '今天也是把承诺兑现给自己的人，帅气！',
+    '节奏把握得刚刚好，继续保持这份松弛的坚持 🌱'
+  ];
+
+
+  /* 页头宝箱条：三态 —— 进行中（🔒 进度） / 已解锁（🎁 可点） / 已领取（🏆 赞美） */
+  function renderChest() {
+    var el = $('#chestBar');
+    if (!el) return;
+    var p = todayProgress();
+    if (!p.total) { el.innerHTML = ''; return; }
+    var today = todayStr();
+    var opened = state.chests[today];
+
+    if (opened) {
+      el.innerHTML = '<div class="chest-bar done">' +
+        '<span class="cb-ico">🏆</span>' +
+        '<span class="cb-body"><b>今日完美通关！</b>' +
+        '<em>' + esc(opened.praise) + '</em></span></div>';
+      return;
+    }
+    if (p.all) {
+      el.innerHTML = '<button type="button" class="chest-bar ready" id="chestOpen">' +
+        '<span class="cb-ico">🎁</span>' +
+        '<span class="cb-body"><b>完美通关宝箱已解锁！</b>' +
+        '<em>点我开箱，领取今天的随机赞美</em></span>' +
+        '<span class="cb-arrow">›</span></button>';
+      var btn = $('#chestOpen');
+      if (btn) btn.addEventListener('click', openChest);
+      return;
+    }
+    var missing = p.items.filter(function (x) { return !x.ok; });
+    var who = missing.slice(0, 2).map(function (x) { return x.name; }).join('、');
+    if (missing.length > 2) who += ' 等 ' + missing.length + ' 个';
+    el.innerHTML = '<div class="chest-bar">' +
+      '<span class="cb-ico">🔒</span>' +
+      '<span class="cb-body"><b>完美通关进度 ' + p.done + '/' + p.total + '</b>' +
+      '<em>还差：' + esc(who) + '</em>' +
+      '<span class="cb-mini"><i style="width:' +
+        Math.round(p.done / p.total * 100) + '%"></i></span>' +
+      '</span></div>';
+  }
+
+  function openChest() {
+    var today = todayStr();
+    var p = todayProgress();
+    if (!p.all || state.chests[today]) { renderChest(); return; }
+    var praise = CHEST_PRAISE[Math.floor(Math.random() * CHEST_PRAISE.length)];
+    state.chests[today] = { praise: praise, at: new Date().toISOString() };
+    save();
+    startConfetti();
+    playSound('levelup');
+    var n = Object.keys(state.chests).length;
+    showModal(
+      '<div class="chest-modal">' +
+        '<span class="big-emoji">🎁</span>' +
+        '<h2>完美通关！</h2>' +
+        '<p class="praise">' + esc(praise) + '</p>' +
+        '<p class="praise-sub">今天的 ' + p.total + ' 个进行中任务，你一个都没落下。</p>' +
+        '<div class="chest-tally"><span class="lbl">累计开出宝箱</span>' +
+          '<span class="amt">' + n + ' 个</span></div>' +
+        '<div class="chest-tally"><span class="lbl">累计大满贯之日</span>' +
+          '<span class="amt">' + perfectDayCount() + ' 天</span></div>' +
+        '<div class="modal-actions"><button class="btn primary wide" id="chestClose">' +
+          '收下赞美，继续加油 💛</button></div>' +
+      '</div>'
+    );
+    var cb = $('#chestClose');
+    if (cb) {
+      cb.addEventListener('pointerdown', function () { juicyPress(cb); });
+      cb.addEventListener('click', function () { closeModal(); render(); });
+    }
+    renderChest();
+  }
+
+  // 打卡按钮按压缩放：更「爽」的即时手感（重复触发先移除再重加，强制重播动画）
+  function juicyPress(el) {
+    if (!el || !el.classList) return;
+    el.classList.remove('press-pop');
+    void el.offsetWidth;                              // 触发重排，保证动画可重播
+    el.classList.add('press-pop');
+    setTimeout(function () { el.classList.remove('press-pop'); }, 400);
+  }
+
+  // 打卡成功后的提示：把连胜 / 升档 / 宝箱解锁的消息揉进同一句 toast
+  function checkinToast(t, baseMsg) {
+    var n = streakOf(t), info = comboInfo(n), unit = unitWord(t);
+    var msg = baseMsg;
+    if (n >= 3) msg += '  ' + info.icon + ' 连胜 ' + n + ' ' + unit + '！';
+    var today = todayStr();
+    if (todayProgress().all && !state.chests[today]) {
+      msg = '🎁 今日完美通关！顶部宝箱已解锁 ✨';
+    } else if (info.min >= 3 && n === info.min) {
+      msg = info.name + ' ' + info.icon + ' 达成！连胜 ' + n + ' ' + unit + ' 啦';
+    }
+    toast(msg);
+  }
+
+
+  /* ==================== 渲染 ==================== */
+  var BADGE = {
+    active: ['进行中', 'b-active'],
+    upcoming: ['未开始', 'b-up'],
+    done: ['已完成 🎉', 'b-done'],
+    expired: ['周期已结束', 'b-exp']
+  };
+
+  function cardHTML(t) {
+    var st = statusOf(t);
+    var done = checkedCount(t);
+    var pct = t.longTerm ? 100 : Math.round(done / t.duration * 100);
+    var today = todayStr();
+    var badge = BADGE[st];
+    var rw = starReward(t);          // 完成整个任务可获得的奖励金额
+    var series = seriesTasks(t);     // 同一习惯的全部轮次（按轮次号升序）
+    var multiRound = series.length > 1;
+    var myRound = t.roundNo || 1;
+    var nextRound = maxRoundNoOf(seriesIdOf(t)) + 1;
+
+    var unit = unitWord(t);
+    var head;
+    if (t.longTerm) {
+      head = (st === 'upcoming') ? '长期循环任务'
+                                 : '长期坚持 · 第 <b>' + currentPeriodNo(t) + '</b> ' + unit;
+    } else if (st === 'active') head = '第 <b>' + currentPeriodNo(t) + '</b>/' + t.duration + ' ' + unit;
+    else if (st === 'upcoming') head = '共 ' + t.duration + ' ' + unit;
+    else if (st === 'done') head = '全部 <b>' + t.duration + '</b> ' + unit + '已完成';
+    else head = '已打卡 ' + done + '/' + t.duration + ' ' + unit;
+
+    /* ---- 今日 / 状态操作区 ---- */
+    var todayArea = '';
+    if (st === 'active') {
+      var periodic = isPeriodic(t);
+      if (isComposite(t)) {
+        var cSlot = periodic ? periodDate(t, currentPeriodNo(t) - 1) : today;
+        if (!periodic && isSkipped(t, today)) {
+          todayArea = '<div class="today"><div class="hint">今天「跳过」。生病、太忙都没关系，好好休息🌙 ～</div></div>';
+        } else {
+          var cAll = t.items.length;
+          var cDone = doneItems(t, cSlot);
+          var cFull = dayAllDone(t, cSlot);
+          var cRows = t.items.map(function (it) {
+            var on = itemDone(t, cSlot, it.id);
+            return cliWrapHTML(it.id,
+              '<button type="button" class="cli' + (on ? ' on' : '') + '" data-action="item" data-id="' + t.id +
+                '" data-date="' + cSlot + '" data-item="' + it.id + '">' +
+                cliBoxHTML(it.name, on) + '</button>');
+          }).join('');
+          todayArea = '<div class="today">' +
+            '<div class="cli-head"><span>' + (periodic ? '本次清单' : '今日清单') + '</span>' +
+              '<span><b>' + cDone + '</b>/' + cAll + ' 项</span></div>' +
+            '<div class="checklist">' + cRows + '</div>' +
+            '<div class="hint" style="margin-top:9px">' + (cFull
+              ? '✅ 已全部完成' + (periodic ? '，本期打卡成功 💛' : '，今天打卡成功 💛')
+              : '勾完所有子项即完成打卡' +
+                (periodic ? '（打卡日 ' + cnDateFull(cSlot) + '）' : '')) +
+            '</div></div>';
+        }
+      } else if (periodic) {
+        var curSlot = periodDate(t, currentPeriodNo(t) - 1);   // 本周 / 本月的打卡日
+        var recW = t.checkins[curSlot];
+        if (recW) {
+          todayArea = '<div class="today">' +
+            '<div class="checked-pill">✅ 本' + unit + '已打卡 <span class="t">' + cnTime(recW.time) + '</span></div>' +
+            (recW.note ? '<div class="note-preview">' + esc(recW.note) + '</div>' : '') +
+            '</div>';
+        } else {
+          todayArea = '<div class="today">' +
+            '<button class="btn primary wide" data-action="checkin" data-id="' + t.id +
+            '" data-date="' + curSlot + '">本' + unit + '打卡 ✓</button>' +
+            (today > curSlot
+              ? '<div class="hint" style="margin-top:9px">本' + unit + '打卡日是 ' + cnDateFull(curSlot) + '，现在补上吧～</div>'
+              : '') +
+            '</div>';
+        }
+      } else {
+        var rec = t.checkins[today];
+        if (isSkipped(t, today)) {
+          todayArea = '<div class="today"><div class="hint">今天「跳过」。生病、太忙都没关系，好好休息🌙 ～</div></div>';
+        } else if (rec) {
+          todayArea = '<div class="today">' +
+            '<div class="checked-pill">✅ 今天已打卡 <span class="t">' + cnTime(rec.time) + '</span></div>' +
+            (rec.note ? '<div class="note-preview">' + esc(rec.note) + '</div>' : '') +
+            '</div>';
+        } else {
+          todayArea = '<div class="today">' +
+            '<button class="btn primary wide" data-action="checkin" data-id="' + t.id +
+            '" data-date="' + today + '">今天打卡 ✓</button>' +
+            '</div>';
+        }
+      }
+    } else if (st === 'upcoming') {
+      todayArea = '<div class="today"><div class="hint">将在 ' + cnDateFull(periodDate(t, 0)) +
+        ' 开始，先休息一下～</div></div>';
+    } else if (st === 'done') {
+      todayArea = '<div class="today">' +
+        '<div class="money-box"><span class="lbl">完成任务奖励（难度 ' + t.stars + ' 星）</span>' +
+          '<span class="amt">' + money(rw) + '</span></div>' +
+        '<div class="reward-box"><div class="reward-label">给自己的奖励</div>' +
+        '<div class="reward-text">' + (t.reward ? esc(t.reward) : '还没想好？现在补上吧 🎁') + '</div></div>' +
+        '<div class="rest-tip">🌙 太棒了！已完成此周期，建议休息 1 周再开启下一轮打卡哦～</div>' +
+        '</div>';
+    } else {
+      todayArea = '<div class="today"><div class="hint">这轮结束了，共打卡 ' + done + '/' + t.duration +
+        ' ' + unit + '。没做到也没关系，休息一下再出发～</div></div>';
+    }
+
+    /* ---- 底部操作区：左侧「查看记录」高频入口 + 右侧「更多」菜单；头部保持清爽 ---- */
+    var recLabel = isWeekly(t) ? '每周记录' : (isMonthly(t) ? '每月记录' : '每天记录');
+    var cardFoot = '<div class="card-foot">' +
+      '<button type="button" class="rec-link' + (expanded[t.id] ? ' open' : '') +
+        '" data-action="toggle" data-id="' + t.id + '">' +
+      (expanded[t.id] ? '收起' + recLabel : '查看' + recLabel) +
+      '<span class="arr">›</span></button>' +
+      '<button type="button" class="more-btn" data-action="more" data-id="' + t.id +
+        '" aria-label="更多操作" title="更多操作">···</button>' +
+      '</div>';
+
+    return '<article class="card" data-id="' + t.id + '">' +
+      '<div class="card-top">' +
+        '<button class="drag-handle" type="button" aria-label="拖动排序" title="按住拖动调整顺序">⠿</button>' +
+        '<div><h3 class="card-title" data-id="' + t.id + '" title="双击可修改名称">' + esc(t.name) + '</h3>' +
+        '<div class="card-meta">' + (multiRound ? '第 ' + myRound + '/' + series.length + ' 轮 · ' : '') +
+          cnDate(t.startDate) + ' 开始 · ' +
+          (t.longTerm ? '长期循环' : '共 ' + t.duration + ' ' + unit) +
+          (isWeekly(t) ? ' · 每' + WEEK[t.weekday] : '') +
+          (isMonthly(t) ? ' · 每月 ' + t.monthDay + ' 号' : '') +
+          (isComposite(t) ? ' · 组合打卡 ' + t.items.length + ' 项' : '') +
+          (t.skips.length ? ' · 跳过 ' + t.skips.length + ' ' + unit : '') +
+          ' · 完成奖励 ' + money(rw) + '</div></div>' +
+        '<div class="card-side">' +
+          (multiRound ? '<span class="badge b-round">🔁 第 ' + myRound + ' 轮</span>' : '') +
+          '<span class="badge ' + badge[1] + '">' + badge[0] + '</span>' +
+          '<button type="button" class="stars" data-action="stars" data-id="' + t.id +
+            '" aria-label="修改难度" title="点这里修改难度">' + starsHTML(t.stars) + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="progress">' +
+        '<div class="progress-head"><span>' + head + '</span>' +
+          '<span class="ph-right">' + comboBadgeHTML(t) +
+          '<em class="ph-count">' + (t.longTerm ? '已打卡 ' + done + ' 次'
+                                                 : '已打卡 ' + done + '/' + t.duration + ' ' + unit) +
+          '</em></span></div>' +
+        '<div class="bar"><div class="bar-fill' + (st === 'done' ? ' done' : (t.longTerm ? ' long' : '')) +
+        '" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      todayArea + cardFoot +
+      (expanded[t.id] ? historyHTML(t) : '') +
+      '</article>';
+  }
+
+  // 历史区里「跳过」的小方块：点击可写下 / 修改跳过原因
+  function skipChipHTML(t, d) {
+    var why = skipNoteOf(t, d);
+    return '<button type="button" class="day skip' + (why ? ' hasnote' : '') + '"' +
+      ' data-action="skipnote" data-id="' + t.id + '" data-date="' + d + '"' +
+      ' title="' + (why ? '跳过原因：' + esc(why) : '点这里写下跳过原因') + '">' +
+      '<span class="n">跳过</span>' +
+      '<span class="w">' + cnShort(d) + '</span>' +
+      '</button>';
+  }
+
+  function historyHTML(t) {
+    var today = todayStr();
+    var weekly = isWeekly(t);
+    var monthly = isMonthly(t);
+    var periodic = weekly || monthly;
+    var unit = unitWord(t);
+    var slots = periodsOf(t);
+    var chips;
+
+    if (periodic) {
+      chips = calendarRows(t).map(function (r) {
+        var d = r.date;
+        if (r.skipped) return skipChipHTML(t, d);
+        var rec = t.checkins[d];
+        var cls = 'day' + (rec ? ' on' : '') + (d === today ? ' today' : '') + (d > today ? ' future' : '');
+        return '<button class="' + cls + '" data-action="day" data-id="' + t.id + '" data-date="' + d + '"' +
+          (d > today ? ' disabled' : '') + '>' +
+          '<span class="n">第' + (r.slotIndex + 1) + unit + '</span>' +
+          '<span class="w">' + (rec ? '✓' : cnShort(d)) + '</span>' +
+          '</button>';
+      }).join('');
+    } else {
+      chips = calendarRows(t).map(function (r) {
+        var d = r.date;
+        if (r.skipped) return skipChipHTML(t, d);
+        var rec = t.checkins[d];
+        var perfect = !!(rec && isPerfectDay(d));      // 大满贯之日：底色转金黄 + 小皇冠
+        var cls = 'day' + (rec ? ' on' : '') + (perfect ? ' perfect' : '') +
+          (d === today ? ' today' : '') + (d > today ? ' future' : '');
+        return '<button class="' + cls + '" data-action="day" data-id="' + t.id + '" data-date="' + d + '"' +
+          (perfect ? ' title="大满贯之日：这天所有按天任务都完成了 👑"' : '') +
+          (d > today ? ' disabled' : '') + '>' +
+          '<span class="n">' + cnShort(d) + '</span>' +
+          '<span class="w">' + (rec ? '✓' : cnWeek(d)) + '</span>' +
+          '</button>';
+      }).join('');
+    }
+
+    var notes = slots.filter(function (d) {
+      return t.checkins[d] && t.checkins[d].note;
+    }).reverse().map(function (d) {
+      var rec = t.checkins[d];
+      return '<div class="note-item"><span class="d">' + cnShort(d) + ' ' + cnTime(rec.time) + '</span>' +
+        '<span>' + esc(rec.note) + '</span></div>';
+    }).join('');
+
+    // 跳过的原因也一并列出，方便回看
+    var skipNotes = (t.skips || []).slice().sort().reverse().filter(function (d) {
+      return skipNoteOf(t, d);
+    }).map(function (d) {
+      return '<div class="note-item skip-note"><span class="d">' + cnShort(d) + ' 跳过</span>' +
+        '<span>' + esc(skipNoteOf(t, d)) + '</span></div>';
+    }).join('');
+
+    return '<div class="history">' +
+      '<h4>' + (weekly ? '每周记录 · 点某一周可以补打卡 / 记一句话，点「跳过」可写原因'
+                       : (monthly ? '每月记录 · 点某一月可以补打卡 / 记一句话，点「跳过」可写原因'
+                                  : '每天记录 · 点任意一天可以补打卡 / 记一句话，点「跳过」可写原因')) + '</h4>' +
+      '<div class="days">' + chips + '</div>' +
+      (notes || skipNotes ? '<div class="notes">' + notes + skipNotes + '</div>' : '') +
+      '</div>';
+  }
+
+  function renderTabs() {
+    var counts = { active: 0, closed: 0, all: state.tasks.length };
+    state.tasks.forEach(function (t) {
+      var s = statusOf(t);
+      if (s === 'active' || s === 'upcoming') counts.active += 1;
+      else if (s === 'done' || s === 'expired') counts.closed += 1;
+    });
+    var names = { active: '进行中', closed: '已结束', all: '全部' };
+    var html = '';
+    ['active', 'closed', 'all'].forEach(function (k) {
+      html += '<button class="tab' + (uiTab === k ? ' on' : '') + '" data-tab="' + k + '">' +
+        names[k] + (counts[k] ? ' ' + counts[k] : '') + '</button>';
+    });
+    $('#tabs').innerHTML = html;
+  }
+
+  /* 按打卡频率分栏：每日 / 每周 / 每月 各自成组 */
+  function groupHTML(ico, title, arr) {
+    if (!arr.length) return '';
+    return '<section class="group">' +
+      '<h2 class="group-head"><span class="g-ico">' + ico + '</span>' + title +
+        '<span class="g-n">' + arr.length + ' 个</span></h2>' +
+      '<div class="grid">' + arr.map(cardHTML).join('') + '</div>' +
+      '</section>';
+  }
+
+  function renderSummary() {
+    var el = $('#rewardSum');
+    if (!el) return;
+    if (!state.tasks.length) { el.innerHTML = ''; return; }
+    var s = rewardSummary();
+    el.innerHTML =
+      '<button type="button" class="sum-item" data-sum="reward" title="点击查看每个完成任务的奖励">' +
+        '<span class="s-ico">💰</span><span class="s-body">' +
+        '<b>' + money(s.total) + '</b><em>累计获得奖励</em></span>' +
+        '<span class="sum-arrow">›</span></button>' +
+      '<button type="button" class="sum-item" data-sum="done" title="点击查看已完成的任务">' +
+        '<span class="s-ico">🏁</span><span class="s-body">' +
+        '<b>' + s.done + ' 个</b><em>已完成任务</em></span>' +
+        '<span class="sum-arrow">›</span></button>';
+  }
+
+  function render() {
+    perfectDayMap = computePerfectDays();   // 重算「大满贯之日」（供历史区金色高亮使用）
+    renderTabs();
+    renderSummary();
+    renderChest();
+    var list = state.tasks.slice().sort(byOrder);
+    if (uiTab !== 'all') list = list.filter(function (t) { return inTab(t, uiTab); });
+
+    if (!list.length) {
+      $('#list').innerHTML = '<div class="empty"><span class="e">🌱</span>' +
+        (state.tasks.length ? '这里暂时没有任务，换个标签看看吧' : '还没有打卡任务<br>点下面的「新建打卡任务」开始吧') +
+        '</div>';
+      return;
+    }
+
+    var daily = list.filter(function (t) { return !isWeekly(t) && !isMonthly(t); });
+    var weekly = list.filter(function (t) { return isWeekly(t); });
+    var monthly = list.filter(function (t) { return isMonthly(t); });
+    $('#list').innerHTML =
+      groupHTML('☀️', '每日打卡', daily) +
+      groupHTML('📅', '每周打卡', weekly) +
+      groupHTML('🗓️', '每月打卡', monthly);
+  }
+
+  /* ==================== 弹层基础 ==================== */
+  var overlay = $('#overlay');
+  var modalEl = $('#modal');
+
+  function showModal(html) {
+    modalEl.innerHTML = html;
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    Array.prototype.forEach.call(modalEl.querySelectorAll('[data-close]'), function (b) {
+      b.addEventListener('click', closeModal);
+    });
+  }
+  function closeModal() {
+    overlay.classList.remove('show');
+    modalEl.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+  });
+
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2300);
+  }
+
+  /* ==================== 组合子项编辑器：共享片段 ==================== */
+  var ITEM_PLACEHOLDER_NEW = '子项名称，例如：整理备忘 / 晒太阳';
+  var ITEM_PLACEHOLDER_EDIT = '子项名称，例如：吃早餐';
+
+  function dragHandleHTML() {
+    return '<button type="button" class="cli-drag" aria-label="拖动排序" title="按住拖动调整顺序">⠿</button>';
+  }
+  // 勾选行内部的「方块 + 文案」
+  function cliBoxHTML(name, on) {
+    return '<span class="box">' + (on ? '✓' : '') + '</span>' +
+      '<span class="t">' + esc(name) + '</span>';
+  }
+  // 带拖拽手柄的可排序行外壳
+  function cliWrapHTML(itemId, inner) {
+    return '<div class="cli-wrap" data-row="' + itemId + '">' + dragHandleHTML() + inner + '</div>';
+  }
+  // 子项编辑行（输入框 + 删除按钮）
+  function itemRowsHTML(items, placeholder) {
+    return items.map(function (it, i) {
+      return '<div class="item-row" data-row="' + it.id + '">' + dragHandleHTML() +
+        '<input type="text" data-idx="' + i + '" maxlength="20" placeholder="' + placeholder + '" value="' +
+          esc(it.name) + '">' +
+        '<button type="button" class="item-del" data-del="' + i + '" aria-label="删除这一项">✕</button>' +
+        '</div>';
+    }).join('');
+  }
+  function itemsCountText(items) {
+    var filled = items.filter(function (it) { return String(it.name || '').trim(); }).length;
+    return '共 ' + filled + ' 项（至少 ' + ITEM_MIN + ' 项，最多 ' + ITEM_MAX + ' 项）';
+  }
+  // 保存前规整子项：去空格、截断、丢空项
+  function normalizeItems(items) {
+    return items.map(function (it) {
+      return { id: it.id || uid(), name: String(it.name || '').trim().slice(0, 20) };
+    }).filter(function (it) { return it.name; });
+  }
+  function ensureMinItems(items) {
+    while (items.length < ITEM_MIN) items.push({ id: uid(), name: '' });
+  }
+  function addBlankItem(items) {
+    if (items.length >= ITEM_MAX) { toast('最多 ' + ITEM_MAX + ' 个子项'); return false; }
+    items.push({ id: uid(), name: '' });
+    return true;
+  }
+  function removeItemAt(items, idx) {
+    if (items.length <= ITEM_MIN) { toast('组合打卡至少需要 ' + ITEM_MIN + ' 个子项'); return false; }
+    items.splice(idx, 1);
+    return true;
+  }
+  function focusLastInput(box) {
+    var inputs = box.querySelectorAll('input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }
+  // 组装一个子项编辑器（新建 / 编辑弹层共用），返回重绘函数
+  function createItemEditor(cfg) {
+    function repaint(addFocus) {
+      var box = $(cfg.box);
+      if (!box) return;
+      box.innerHTML = itemRowsHTML(cfg.items, cfg.placeholder);
+      $(cfg.count).textContent = itemsCountText(cfg.items);
+      if (addFocus) focusLastInput(box);
+    }
+    $(cfg.box).addEventListener('input', function (e) {
+      var inp = e.target.closest('input[data-idx]');
+      if (!inp) return;
+      cfg.items[Number(inp.dataset.idx)].name = inp.value;
+      $(cfg.count).textContent = itemsCountText(cfg.items);
+    });
+    $(cfg.box).addEventListener('click', function (e) {
+      var b = e.target.closest('[data-del]');
+      if (!b) return;
+      if (removeItemAt(cfg.items, Number(b.dataset.del))) repaint(false);
+    });
+    $(cfg.box).addEventListener('pointerdown', function (e) {
+      var handle = e.target.closest('.cli-drag');
+      if (!handle) return;
+      var row = handle.closest('[data-row]');
+      if (!row) return;
+      startItemDrag($(cfg.box), row, function (ids) {
+        reorderById(cfg.items, ids);
+        repaint(false);
+      }, e);
+    });
+    $(cfg.add).addEventListener('click', function () {
+      if (addBlankItem(cfg.items)) repaint(true);
+    });
+    return repaint;
+  }
+
+  /* ==================== 新建 / 再来一轮 ==================== */
+  function openNewTask(prefill) {
+    var p = prefill || null;
+    // 「再来一轮」：把新卡片挂到原卡片的系列里，并作为下一轮
+    var linkSeries = null, linkRound = 1;
+    if (p) {
+      if (!p.seriesId) p.seriesId = sid();   // 首次续一轮时，给原卡片补上系列标识
+      linkSeries = p.seriesId;
+      linkRound = maxRoundNoOf(linkSeries) + 1;
+    }
+    var start0 = todayStr();
+    // 按天
+    var days = (p && p.mode === 'daily') ? p.duration : 21;
+    var isCustom = [14, 21, 30].indexOf(days) === -1;
+    // 按周
+    var weeks = (p && p.mode === 'weekly') ? p.duration : 8;
+    var weeksCustom = [4, 8, 12].indexOf(weeks) === -1;
+    // 按月
+    var months = (p && p.mode === 'monthly' && !p.longTerm) ? p.duration : 12;
+    var monthsCustom = [3, 6, 12].indexOf(months) === -1;
+    var longTerm = !!(p && p.mode === 'monthly' && p.longTerm);
+    var monthDay = (p && p.mode === 'monthly' && p.monthDay)
+      ? p.monthDay : Math.min(31, parse(start0).getDate());
+    var mode = (p && (p.mode === 'weekly' || p.mode === 'monthly')) ? p.mode : 'daily';
+    var type = (p && p.type === 'composite') ? 'composite' : 'single';
+    var items = (p && Array.isArray(p.items))
+      ? p.items.map(function (it) { return { id: it.id || uid(), name: it.name || '' }; })
+      : [];
+    if (type === 'composite') ensureMinItems(items);
+    var weekday = (p && typeof p.weekday === 'number') ? p.weekday : parse(start0).getDay();
+    var weekdayTouched = !!p;
+    var monthDayTouched = !!(p && p.mode === 'monthly');
+    // 难度系数：1~3 星（再来一轮时沿用原难度）
+    var stars = Math.max(STAR_MIN, Math.min(STAR_MAX, parseInt(p && p.stars, 10) || STAR_MIN));
+
+    var WD_ORDER = [1, 2, 3, 4, 5, 6, 0];   // 周一优先
+    var weekdayChips = WD_ORDER.map(function (w) {
+      return '<button type="button" class="dchip" data-wd="' + w + '">' + WEEK[w] + '</button>';
+    }).join('');
+    var starBtns = starButtonsHTML();
+
+    showModal(
+      '<h2>' + (p ? '开启第 ' + linkRound + ' 轮 🌱' : '新建打卡任务 🌱') + '</h2>' +
+      '<p class="modal-sub">不追求完美，只要记得就好</p>' +
+      '<div class="field"><label>任务名称</label>' +
+        '<input type="text" id="fName" maxlength="30" placeholder="例如：太极拳（每周一）" value="' +
+        (p ? esc(p.name) : '') + '"></div>' +
+      '<div class="field"><label>开始日期</label>' +
+        '<input type="date" id="fStart" value="' + start0 + '"></div>' +
+      '<div class="field"><label>打卡频率</label>' +
+        '<div class="chips" id="fFreq">' +
+          '<button type="button" class="dchip" data-freq="daily">按天</button>' +
+          '<button type="button" class="dchip" data-freq="weekly">按周</button>' +
+          '<button type="button" class="dchip" data-freq="monthly">按月</button>' +
+        '</div></div>' +
+      '<div class="field" id="fDaily"><label>持续周期</label>' +
+        '<div class="chips" id="fChips">' +
+          '<button type="button" class="dchip" data-days="14">14 天</button>' +
+          '<button type="button" class="dchip" data-days="21">21 天（三周）</button>' +
+          '<button type="button" class="dchip" data-days="30">30 天</button>' +
+          '<button type="button" class="dchip" data-days="custom">自定义</button>' +
+        '</div>' +
+        '<div class="hint" style="margin-top:8px">按天累加并不等于自然月，若要「每月固定某天」打卡，请把打卡频率改为「按月」。</div>' +
+        '<input type="number" id="fCustom" min="1" max="365" value="' + days +
+        '" style="margin-top:10px" hidden></div>' +
+      '<div class="field" id="fWeekly" hidden><label>持续周期</label>' +
+        '<div class="chips" id="wChips">' +
+          '<button type="button" class="dchip" data-weeks="4">4 周</button>' +
+          '<button type="button" class="dchip" data-weeks="8">8 周</button>' +
+          '<button type="button" class="dchip" data-weeks="12">12 周</button>' +
+          '<button type="button" class="dchip" data-weeks="custom">自定义</button>' +
+        '</div>' +
+        '<input type="number" id="wCustom" min="1" max="156" value="' + weeks +
+        '" style="margin-top:10px" hidden>' +
+        '<label style="display:block;margin-top:14px">每周几打卡</label>' +
+        '<div class="chips" id="wWeekday">' + weekdayChips + '</div>' +
+      '</div>' +
+      '<div class="field" id="fMonthly" hidden>' +
+        '<label>每月几号打卡</label>' +
+        '<div class="chips" id="mDayChips">' +
+          [1, 5, 10, 15, 20, 28].map(function (d) {
+            return '<button type="button" class="dchip" data-mday="' + d + '">' + d + ' 号</button>';
+          }).join('') +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">' +
+          '<span class="hint" style="margin:0">或指定：</span>' +
+          '<input type="number" id="fMonthDay" min="1" max="31" value="' + monthDay + '" style="width:96px">' +
+          '<span class="hint" style="margin:0">号</span>' +
+        '</div>' +
+        '<div class="hint" id="mDayHint" style="margin-top:8px"></div>' +
+        '<label style="display:block;margin-top:14px">持续周期</label>' +
+        '<div class="chips" id="mChips">' +
+          '<button type="button" class="dchip" data-months="3">3 个月</button>' +
+          '<button type="button" class="dchip" data-months="6">6 个月</button>' +
+          '<button type="button" class="dchip" data-months="12">12 个月</button>' +
+          '<button type="button" class="dchip" data-months="custom">自定义</button>' +
+          '<button type="button" class="dchip" data-months="long">长期循环 ♾️</button>' +
+        '</div>' +
+        '<input type="number" id="mCustom" min="1" max="120" value="' + months +
+        '" style="margin-top:10px" hidden>' +
+      '</div>' +
+
+      '<div class="field"><label>任务类型</label>' +
+        '<div class="chips" id="fType">' +
+          '<button type="button" class="dchip" data-type="single">单项打卡</button>' +
+          '<button type="button" class="dchip" data-type="composite">组合打卡（多项清单）</button>' +
+        '</div>' +
+        '<div id="fComp" hidden style="margin-top:12px">' +
+          '<label>清单子项（勾完全部才算完成当天打卡）</label>' +
+          '<div id="fItems"></div>' +
+          '<button type="button" class="item-add" id="fAddItem">＋ 添加一项</button>' +
+          '<div class="item-count" id="fItemCount"></div>' +
+        '</div></div>' +
+      '<div class="field"><label>难度系数（1~3 星，完成整个任务才有奖励）</label>' +
+        '<div class="starpick" id="fStars">' + starBtns + '</div>' +
+        '<div class="star-hint" id="fStarHint"></div></div>' +
+      '<div class="field"><label>完成后的奖励（可先空着，完成时再填）</label>' +
+        '<input type="text" id="fReward" maxlength="50" placeholder="例如：给自己买个小礼物 🎁" value="' +
+        (p ? esc(p.reward || '') : '') + '"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="fSave">开始打卡</button>' +
+      '</div>'
+    );
+
+    var freqChips = $('#fFreq');
+    var dailyBox = $('#fDaily');
+    var weeklyBox = $('#fWeekly');
+    var monthlyBox = $('#fMonthly');
+    var chips = $('#fChips');
+    var custom = $('#fCustom');
+    var wChips = $('#wChips');
+    var wCustom = $('#wCustom');
+    var wdChips = $('#wWeekday');
+    var mChips = $('#mChips');
+    var mCustom = $('#mCustom');
+    var mDayChips = $('#mDayChips');
+    var mDayInput = $('#fMonthDay');
+    var mDayHint = $('#mDayHint');
+    var typeChips = $('#fType');
+    var compBox = $('#fComp');
+    var starBox = $('#fStars');
+    var starHint = $('#fStarHint');
+
+    /* ---- 难度系数：1~3 星 ---- */
+    function paintStars() { paintStarPicker(starBox, starHint, stars); }
+    wireStarPicker(starBox, function (n) { stars = n; paintStars(); });
+
+    /* ---- 组合打卡：子项编辑器 ---- */
+    var paintItems = createItemEditor({
+      box: '#fItems', count: '#fItemCount', add: '#fAddItem',
+      items: items, placeholder: ITEM_PLACEHOLDER_NEW
+    });
+
+    function paint() {
+      Array.prototype.forEach.call(freqChips.querySelectorAll('.dchip'), function (c) {
+        c.classList.toggle('on', c.dataset.freq === mode);
+      });
+      dailyBox.hidden = (mode !== 'daily');
+      weeklyBox.hidden = (mode !== 'weekly');
+      monthlyBox.hidden = (mode !== 'monthly');
+
+      paintDchips(chips, 'days', days, isCustom);
+      custom.hidden = !isCustom;
+
+      paintDchips(wChips, 'weeks', weeks, weeksCustom);
+      wCustom.hidden = !weeksCustom;
+
+      // 按月：每月几号 + 持续周期（含长期循环）
+      Array.prototype.forEach.call(mDayChips.querySelectorAll('.dchip'), function (c) {
+        c.classList.toggle('on', Number(c.dataset.mday) === monthDay);
+      });
+      mDayHint.textContent = monthDay >= 29
+        ? '小提示：没有 ' + monthDay + ' 号的月份会自动按当月最后一天打卡'
+        : '';
+      Array.prototype.forEach.call(mChips.querySelectorAll('.dchip'), function (c) {
+        var v = c.dataset.months;
+        var on = (v === 'long') ? longTerm
+               : (v === 'custom') ? (!longTerm && monthsCustom)
+               : (!longTerm && !monthsCustom && Number(v) === months);
+        c.classList.toggle('on', on);
+      });
+      mCustom.hidden = !(monthsCustom && !longTerm);
+
+      Array.prototype.forEach.call(wdChips.querySelectorAll('.dchip'), function (c) {
+        c.classList.toggle('on', Number(c.dataset.wd) === weekday);
+      });
+
+      Array.prototype.forEach.call(typeChips.querySelectorAll('.dchip'), function (c) {
+        c.classList.toggle('on', c.dataset.type === type);
+      });
+      compBox.hidden = (type !== 'composite');
+      if (type === 'composite') paintItems(false);
+    }
+
+    freqChips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      mode = c.dataset.freq;
+      paint();
+    });
+    chips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      if (c.dataset.days === 'custom') { isCustom = true; days = Number(custom.value) || days; }
+      else { isCustom = false; days = Number(c.dataset.days); }
+      paint();
+    });
+    custom.addEventListener('input', function () {
+      days = Math.max(1, Math.min(365, Number(custom.value) || 1));
+    });
+    wChips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      if (c.dataset.weeks === 'custom') { weeksCustom = true; weeks = Number(wCustom.value) || weeks; }
+      else { weeksCustom = false; weeks = Number(c.dataset.weeks); }
+      paint();
+    });
+    wCustom.addEventListener('input', function () {
+      weeks = Math.max(1, Math.min(156, Number(wCustom.value) || 1));
+    });
+    mDayChips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      monthDay = Number(c.dataset.mday);
+      monthDayTouched = true;
+      mDayInput.value = monthDay;
+      paint();
+    });
+    mDayInput.addEventListener('input', function () {
+      monthDay = Math.max(1, Math.min(31, Number(mDayInput.value) || 1));
+      monthDayTouched = true;
+      paint();
+    });
+    mChips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      var v = c.dataset.months;
+      if (v === 'long') { longTerm = true; }
+      else if (v === 'custom') { longTerm = false; monthsCustom = true; months = Number(mCustom.value) || months; }
+      else { longTerm = false; monthsCustom = false; months = Number(v); }
+      paint();
+    });
+    mCustom.addEventListener('input', function () {
+      months = Math.max(1, Math.min(120, Number(mCustom.value) || 1));
+    });
+    wdChips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      weekday = Number(c.dataset.wd);
+      weekdayTouched = true;
+      paint();
+    });
+    $('#fStart').addEventListener('change', function () {
+      var v = this.value || todayStr();
+      if (!weekdayTouched) weekday = parse(v).getDay();
+      if (!monthDayTouched) { monthDay = Math.min(31, parse(v).getDate()); mDayInput.value = monthDay; }
+      paint();
+    });
+
+    /* ---- 组合打卡：任务类型切换（子项增删改由 createItemEditor 统一处理） ---- */
+    typeChips.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      type = c.dataset.type;
+      if (type === 'composite') ensureMinItems(items);
+      paint();
+    });
+    paint();
+    paintStars();
+
+    $('#fSave').addEventListener('click', function () {
+      var name = $('#fName').value.trim();
+      if (!name) { toast('先给这个习惯起个名字吧～'); $('#fName').focus(); return; }
+      var start = $('#fStart').value || todayStr();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) start = todayStr();
+      var reward = $('#fReward').value.trim();
+
+      var saveItems = [];
+      if (type === 'composite') {
+        saveItems = normalizeItems(items);
+        if (saveItems.length < ITEM_MIN) {
+          toast('组合打卡至少需要 ' + ITEM_MIN + ' 个子项，先补全清单吧～');
+          return;
+        }
+      }
+
+      var dur, saveMode, wd, mDay, isLong = false;
+      if (mode === 'weekly') {
+        dur = Math.max(1, Math.min(156, weeksCustom ? (Number(wCustom.value) || weeks) : weeks));
+        wd = weekday;
+        saveMode = 'weekly';
+      } else if (mode === 'monthly') {
+        isLong = longTerm;
+        dur = longTerm ? 12
+                       : Math.max(1, Math.min(120, monthsCustom ? (Number(mCustom.value) || months) : months));
+        mDay = Math.max(1, Math.min(31, Number(mDayInput.value) || monthDay));
+        wd = parse(start).getDay();
+        saveMode = 'monthly';
+      } else {
+        dur = Math.max(1, Math.min(365, isCustom ? (Number(custom.value) || days) : days));
+        wd = parse(start).getDay();
+        saveMode = 'daily';
+      }
+
+      state.tasks.push({
+        id: uid(),
+        seriesId: linkSeries,
+        roundNo: linkRound,
+        name: name,
+        startDate: start,
+        duration: dur,
+        mode: saveMode,
+        weekday: wd,
+        monthDay: (saveMode === 'monthly') ? mDay : parse(start).getDate(),
+        longTerm: (saveMode === 'monthly') ? isLong : false,
+        type: (type === 'composite') ? 'composite' : 'single',
+        items: saveItems,
+        itemLog: {},
+        stars: stars,
+        skips: [],
+        reward: reward,
+        createdAt: new Date().toISOString(),
+        checkins: {},
+        celebrated: false,
+        renameCount: 0,
+        durationCount: 0,
+        order: nextOrder()
+      });
+      save();
+      uiTab = 'active';
+      closeModal();
+      render();
+      toast('已开始！慢慢来，不着急 🌱');
+    });
+  }
+
+  /* ==================== 打卡 / 补打卡 ==================== */
+  function openCheckin(t, date) {
+    var today = todayStr();
+    if (date > today) { toast('还没到这一天哦，慢慢来～'); return; }
+    var rec = t.checkins[date] || null;
+    var isToday = (date === today);
+
+    showModal(
+      '<h2>' + (isToday ? '今天打卡 ✓' : '补打卡 📝') + '</h2>' +
+      '<p class="modal-sub">' + cnDateFull(date) + ' · ' + esc(t.name) + '</p>' +
+      '<div class="field"><label>随手记一句（可留空）</label>' +
+        '<textarea id="noteInput" maxlength="200" placeholder="例如：晚上8点游完，感觉神清气爽">' +
+        (rec ? esc(rec.note || '') : '') + '</textarea></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="saveCheckin">' + (rec ? '保存修改' : '完成打卡') + '</button>' +
+      '</div>' +
+      (rec ? '<button class="txt-btn dg" id="removeCheckin" style="display:block;margin:16px auto 0">' +
+        '删除这一天的打卡记录</button>' : '')
+    );
+
+    var saveBtn = $('#saveCheckin');
+    saveBtn.addEventListener('pointerdown', function () { juicyPress(saveBtn); });
+    saveBtn.addEventListener('click', function () {
+      var note = $('#noteInput').value.trim();
+      var wasComplete = isComplete(t);
+      var isNew = !t.checkins[date];   // 首次打卡（而非修改已有记录）才播瞬时反馈
+      t.checkins[date] = { time: rec ? rec.time : new Date().toISOString(), note: note };
+      var nowComplete = isComplete(t);
+      if (nowComplete) t.celebrated = true;
+      save();
+      closeModal();
+      render();
+      // 打卡成功瞬间：卡片中央喷射粒子 + 卡片弹跳 + 成就音效
+      if (isNew) checkinFeedback(t, null, nowComplete ? 'levelup' : 'checkin');
+      if (!celebrateOnComplete(t, wasComplete, nowComplete)) {
+        checkinToast(t, isToday ? '打卡成功，为你骄傲 💛' : '补打卡成功 ✓');
+      }
+    });
+
+    var rm = $('#removeCheckin');
+    if (rm) {
+      rm.addEventListener('click', function () {
+        delete t.checkins[date];
+        save();
+        closeModal();
+        render();
+        toast('已删除这一天的记录');
+      });
+    }
+  }
+
+  /* ==================== 难度系数（1~3 星 · 决定完成奖励金额） ==================== */
+  function openEditStars(t) {
+    var picking = t.stars;
+    showModal(
+      '<h2>难度系数 ⭐</h2>' +
+      '<p class="modal-sub">' + esc(t.name) + ' · 难度越高，完成后的奖励越高</p>' +
+      '<div class="field"><label>这件事对你来说有多难？（1~3 星）</label>' +
+        '<div class="starpick" id="eStars">' + starButtonsHTML() + '</div>' +
+        '<div class="star-hint" id="eStarHint"></div></div>' +
+      '<p class="modal-sub" style="margin-top:2px">奖励在「完成整个任务」时发放；改完难度后，已经计入的奖励也会按新星级重新计算。</p>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="sSave">保存</button>' +
+      '</div>'
+    );
+
+    var box = $('#eStars');
+    var hint = $('#eStarHint');
+    function paint() { paintStarPicker(box, hint, picking); }
+    wireStarPicker(box, function (n) { picking = n; paint(); });
+    paint();
+
+    $('#sSave').addEventListener('click', function () {
+      var changed = picking !== t.stars;
+      t.stars = picking;
+      save();
+      closeModal();
+      render();
+      toast(changed ? '难度已改为 ' + picking + ' 星 · 完成可得 ' + money(starReward(t))
+                    : '难度没有变化');
+    });
+  }
+
+  /* ==================== 奖励设置 ==================== */
+  function openReward(t, backToCelebrate) {
+    showModal(
+      '<h2>完成后的奖励 🎁</h2>' +
+      '<p class="modal-sub">' + esc(t.name) + ' · ' +
+        (t.longTerm ? '长期循环 ♾️' : '共 ' + t.duration + ' ' + unitWord(t)) + '</p>' +
+      '<div class="field"><label>想给自己一点什么小奖励？</label>' +
+        '<input type="text" id="rInput" maxlength="50" placeholder="例如：给自己买个小礼物 / 吃顿大餐" value="' +
+        esc(t.reward || '') + '"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="rSave">保存</button>' +
+      '</div>'
+    );
+    $('#rSave').addEventListener('click', function () {
+      t.reward = $('#rInput').value.trim();
+      save();
+      closeModal();
+      render();
+      if (backToCelebrate) setTimeout(function () { showCelebrate(t, false); }, 180);
+      else toast('奖励已记下 🎁');
+    });
+  }
+
+  /* ==================== 动态调整总周期（最多 3 次） ==================== */
+  // 应用新的总周期：仅在“真正发生变化”时计入修改次数，且不超过 DURATION_MAX
+  // 返回 { changed, value, limited }
+  function applyDurationChange(t, newDur) {
+    var maxV = isMonthly(t) ? 120 : (isWeekly(t) ? 156 : 365);
+    newDur = Math.max(1, Math.min(maxV, parseInt(newDur, 10) || t.duration));
+    if (newDur === t.duration && !t.longTerm) return { changed: false, value: newDur };
+    if (t.durationCount >= DURATION_MAX) return { changed: false, value: t.duration, limited: true };
+    t.duration = newDur;
+    t.longTerm = false;                         // 指定了固定周期，即不再是长期循环
+    t.durationCount += 1;
+    if (!isComplete(t)) t.celebrated = false;   // 扩期后不再完成，日后达成可再度庆祝
+    return { changed: true, value: newDur };
+  }
+
+  // 切换「长期循环（无限期）」：同样计入修改次数
+  function applyLongTermChange(t, on) {
+    on = !!on;
+    if (!!t.longTerm === on) return { changed: false };
+    if (t.durationCount >= DURATION_MAX) return { changed: false, limited: true };
+    t.longTerm = on;
+    t.durationCount += 1;
+    t.celebrated = false;
+    return { changed: true };
+  }
+
+  function openAdjustDuration(t) {
+    var left = DURATION_MAX - t.durationCount;
+    if (left <= 0) {
+      toast('调整周期次数已达上限（' + DURATION_MAX + '/' + DURATION_MAX + '）');
+      return;
+    }
+
+    var monthly = isMonthly(t);
+    var weekly = isWeekly(t);
+    var unit = unitWord(t);
+    var presets = monthly ? [3, 6, 12] : (weekly ? [4, 8, 12] : [14, 21, 30]);
+    var maxV = monthly ? 120 : (weekly ? 156 : 365);
+    var cur = t.duration;
+    var isLong = !!t.longTerm;
+    var val = isLong ? 'long' : cur;
+    var isCustom = !isLong && presets.indexOf(cur) === -1;
+    var done = checkedCount(t);
+
+    var chips = presets.map(function (n) {
+      return '<button type="button" class="dchip" data-num="' + n + '">' + n + ' ' + unit + '</button>';
+    }).join('') +
+      (monthly ? '<button type="button" class="dchip" data-num="long">长期循环 ♾️</button>' : '') +
+      '<button type="button" class="dchip" data-num="custom">自定义</button>';
+
+    showModal(
+      '<h2>调整总周期 📅</h2>' +
+      '<p class="modal-sub">' + esc(t.name) + ' · 当前' +
+        (isLong ? '长期循环 ♾️（无限期）' : '共 ' + cur + ' ' + unit) +
+        ' · 已打卡 ' + done + ' 次</p>' +
+      '<div class="field"><label>' + (monthly ? '新的持续周期' : '新的总周期') + '</label>' +
+        '<div class="chips" id="dChips">' + chips + '</div>' +
+        '<input type="number" id="dCustom" min="1" max="' + maxV + '" value="' + cur +
+        '" style="margin-top:10px" hidden></div>' +
+      '<div class="hint" id="dHint" style="margin-top:12px"></div>' +
+      '<p class="modal-sub" style="margin-top:10px">每个任务一生最多可调整 ' + DURATION_MAX +
+        ' 次，还可调整 <b>' + left + '</b> 次。</p>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="dSave">保存</button>' +
+      '</div>'
+    );
+
+    var chipBox = $('#dChips');
+    var custom = $('#dCustom');
+    var hint = $('#dHint');
+
+    function paint() {
+      Array.prototype.forEach.call(chipBox.querySelectorAll('.dchip'), function (c) {
+        var v = c.dataset.num;
+        var on = (v === 'long') ? (val === 'long')
+               : (v === 'custom') ? (val !== 'long' && isCustom)
+               : (val !== 'long' && !isCustom && Number(v) === val);
+        c.classList.toggle('on', on);
+      });
+      custom.hidden = !(val !== 'long' && isCustom);
+      if (val === 'long') hint.textContent = '改为长期循环后，任务会一直进行下去，直到你手动结束。';
+      else if (val < done) hint.textContent = '⚠️ 新周期比已打卡次数还少，保存后会直接标记为「已完成」';
+      else if (val > cur) hint.textContent = '周期将延长 ' + (val - cur) + ' ' + unit;
+      else if (val < cur) hint.textContent = '周期将缩短 ' + (cur - val) + ' ' + unit;
+      else hint.textContent = '';
+    }
+
+    chipBox.addEventListener('click', function (e) {
+      var c = e.target.closest('.dchip');
+      if (!c) return;
+      if (c.dataset.num === 'long') {
+        val = 'long';
+      } else if (c.dataset.num === 'custom') {
+        isCustom = true;
+        val = Math.max(1, Math.min(maxV, Number(custom.value) || cur));
+      } else {
+        isCustom = false;
+        val = Number(c.dataset.num);
+      }
+      paint();
+    });
+    custom.addEventListener('input', function () {
+      val = Math.max(1, Math.min(maxV, Number(custom.value) || 1));
+      paint();
+    });
+    paint();
+
+    $('#dSave').addEventListener('click', function () {
+      var r;
+      if (val === 'long') {
+        r = applyLongTermChange(t, true);
+        if (r.limited) {
+          closeModal();
+          toast('调整周期次数已达上限（' + DURATION_MAX + '/' + DURATION_MAX + '）');
+          return;
+        }
+        if (!r.changed) { closeModal(); toast('总周期没有变化'); return; }
+        save();
+        closeModal();
+        render();
+        toast('已改为长期循环 ♾️，还可调整 ' + (DURATION_MAX - t.durationCount) + ' 次');
+        return;
+      }
+      var raw = isCustom ? (Number(custom.value) || val) : val;
+      r = applyDurationChange(t, raw);
+      if (r.limited) {
+        closeModal();
+        toast('调整周期次数已达上限（' + DURATION_MAX + '/' + DURATION_MAX + '）');
+        return;
+      }
+      if (!r.changed) { closeModal(); toast('总周期没有变化'); return; }
+      save();
+      closeModal();
+      render();
+      toast('总周期已调整为 ' + r.value + ' ' + unit +
+        '，还可调整 ' + (DURATION_MAX - t.durationCount) + ' 次');
+    });
+  }
+
+  /* ==================== 组合打卡：清单勾选 / 补记 ==================== */
+  function openChecklist(t, date) {
+    if (date > todayStr()) { toast('还没到这一天哦，慢慢来～'); return; }
+    var isToday = (date === todayStr());
+
+    function rowsHTML() {
+      return (t.items || []).map(function (it) {
+        var on = itemDone(t, date, it.id);
+        return cliWrapHTML(it.id,
+          '<button type="button" class="cli' + (on ? ' on' : '') + '" data-cli="' + it.id + '">' +
+          cliBoxHTML(it.name, on) + '</button>');
+      }).join('');
+    }
+
+    showModal(
+      '<h2>' + (isToday ? '今日清单 ☀️' : '补记清单 📝') + '</h2>' +
+      '<p class="modal-sub">' + cnDateFull(date) + ' · ' + esc(t.name) + '</p>' +
+      '<div class="checklist" id="cliList">' + rowsHTML() + '</div>' +
+      '<div class="hint" id="cliHint" style="margin-top:12px"></div>' +
+      '<div class="modal-actions"><button class="btn primary" data-close>完成</button></div>'
+    );
+
+    function paint() {
+      var box = $('#cliList');
+      if (!box) return;   // 弹层可能已被「完成庆祝」替换
+      box.innerHTML = rowsHTML();
+      var all = (t.items || []).length;
+      var n = doneItems(t, date);
+      var hint = $('#cliHint');
+      if (hint) hint.textContent = (all && n === all)
+        ? '全部 ' + all + ' 项已完成，今天达标 🎉'
+        : '已完成 ' + n + '/' + all + ' 项，勾完所有子项即完成打卡';
+    }
+    paint();
+
+    $('#cliList').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cli]');
+      if (!b) return;
+      juicyPress(b);
+      toggleItem(t, date, b.dataset.cli, e);
+      paint();
+    });
+    $('#cliList').addEventListener('pointerdown', function (e) {
+      var handle = e.target.closest('.cli-drag');
+      if (!handle) return;
+      var row = handle.closest('[data-row]');
+      if (!row) return;
+      startItemDrag($('#cliList'), row, checklistDrop(t), e);
+    });
+  }
+
+  /* ==================== 组合打卡：编辑清单子项 ==================== */
+  function openEditItems(t) {
+    var items = (t.items || []).map(function (it) { return { id: it.id, name: it.name }; });
+    ensureMinItems(items);
+
+    showModal(
+      '<h2>编辑清单 📋</h2>' +
+      '<p class="modal-sub">' + esc(t.name) + ' · 勾完所有子项才算完成当天打卡</p>' +
+      '<div class="field"><label>清单子项</label>' +
+        '<div id="eiItems">' + itemRowsHTML(items, ITEM_PLACEHOLDER_EDIT) + '</div>' +
+        '<button type="button" class="item-add" id="eiAdd">＋ 添加一项</button>' +
+        '<div class="item-count" id="eiCount">' + itemsCountText(items) + '</div>' +
+      '</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="eiSave">保存</button>' +
+      '</div>'
+    );
+
+    createItemEditor({
+      box: '#eiItems', count: '#eiCount', add: '#eiAdd',
+      items: items, placeholder: ITEM_PLACEHOLDER_EDIT
+    });
+
+    $('#eiSave').addEventListener('click', function () {
+      var valid = normalizeItems(items);
+      if (valid.length < ITEM_MIN) { toast('组合打卡至少需要 ' + ITEM_MIN + ' 个子项'); return; }
+      t.items = valid;
+      resyncComposite(t);
+      save();
+      closeModal();
+      render();
+      toast('清单已更新（共 ' + valid.length + ' 项）');
+    });
+  }
+
+  /* ==================== 卡片「更多」菜单：收纳低频 / 管理功能 ==================== */
+  function openMoreMenu(t) {
+    var st = statusOf(t);
+    var weekly = isWeekly(t);
+    var monthly = isMonthly(t);
+    var periodic = weekly || monthly;
+    var unit = unitWord(t);
+    var done = checkedCount(t);
+    var series = seriesTasks(t);
+    var multiRound = series.length > 1;
+    var nextRound = maxRoundNoOf(seriesIdOf(t)) + 1;
+
+    // 「修改今天的记录」（按周/按月则是本周/本月的打卡日）——仅进行中的任务提供
+    var checkinDate = periodic ? periodDate(t, currentPeriodNo(t) - 1) : todayStr();
+    var checkinLabel = periodic
+      ? (t.checkins[checkinDate] ? '修改本' + unit + '的记录' : '本' + unit + '打卡')
+      : (t.checkins[checkinDate] ? '修改今天的记录' : '今天打卡');
+    var checkinHint = t.checkins[checkinDate]
+      ? '已打卡，可改时间或补一句心情' : '还没打卡，点这里补上';
+
+    function item(menu, ico, title, hint, danger) {
+      return '<button type="button" class="menu-item' + (danger ? ' dg' : '') +
+        '" data-menu="' + menu + '"' +
+        (menu === 'checkin' ? ' data-date="' + checkinDate + '"' : '') + '>' +
+        '<span class="m-ico">' + ico + '</span>' +
+        '<span class="m-txt">' + title + (hint ? '<em>' + hint + '</em>' : '') + '</span>' +
+        '<span class="m-arr">›</span>' +
+        '</button>';
+    }
+
+    var list = '' +
+      (st === 'active' ? item('checkin', '📝', checkinLabel, checkinHint) : '') +
+      item('skip', '🚫', '跳过某' + unit,
+        t.skips.length ? '已跳过 ' + t.skips.length + ' ' + unit : '那天不用打卡，不计入总数') +
+      (isComposite(t) ? item('items', '📋', '编辑清单', '组合打卡共 ' + t.items.length + ' 项') : '') +
+      item('duration', '📆', '调整周期',
+        t.durationCount ? '已调整 ' + t.durationCount + '/' + DURATION_MAX + ' 次'
+                        : (t.longTerm ? '长期循环 ♾️' : '当前共 ' + t.duration + ' ' + unit)) +
+      item('stars', '⭐', '难度设置', '当前 ' + t.stars + ' 星') +
+      item('reward', '🎁', t.reward ? '修改奖励' : '设定奖励',
+        t.reward ? esc(t.reward) : '完成后给自己的奖励') +
+      (multiRound ? item('rounds', '🔁', '轮次记录',
+        series.length + ' 轮 · 当前第 ' + (t.roundNo || 1) + ' 轮') : '') +
+      ((st === 'done' || st === 'expired')
+        ? item('again', '✨', '开启第 ' + nextRound + ' 轮', '再来一轮挑战') : '') +
+      item('del', '🗑️', '删除卡片', '删除后无法恢复', true);
+
+    showModal(
+      '<h2>更多操作 ⚙️</h2>' +
+      '<p class="modal-sub">' + esc(t.name) + ' · ' +
+        (weekly ? '每周打卡' : (monthly ? '每月打卡' : '每日打卡')) +
+        ' · ' + (t.longTerm ? '已打卡 ' + done + ' 次'
+                            : '已打卡 ' + done + '/' + t.duration + ' ' + unit) + '</p>' +
+      '<div class="menu-list" id="moreMenu">' + list + '</div>' +
+      '<div class="modal-actions"><button class="btn ghost" data-close>关闭</button></div>'
+    );
+
+    $('#moreMenu').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-menu]');
+      if (!b) return;
+      var a = b.dataset.menu;
+      closeModal();
+      if (a === 'checkin') {
+        if (isComposite(t)) openChecklist(t, b.dataset.date);
+        else openCheckin(t, b.dataset.date);
+      } else if (a === 'skip') {
+        openSkipManager(t);
+      } else if (a === 'items') {
+        openEditItems(t);
+      } else if (a === 'duration') {
+        openAdjustDuration(t);
+      } else if (a === 'stars') {
+        openEditStars(t);
+      } else if (a === 'reward') {
+        openReward(t, false);
+      } else if (a === 'rounds') {
+        openRounds(t);
+      } else if (a === 'again') {
+        openNewTask(t);
+      } else if (a === 'del') {
+        confirmDelete(t);
+      }
+    });
+  }
+
+  /* ==================== 跳过某些周期（按天=某天 / 按周=某周） ==================== */
+  function openSkipManager(t) {
+    var weekly = isWeekly(t);
+    var monthly = isMonthly(t);
+    var periodic = weekly || monthly;
+    var unit = unitWord(t);
+    var today = todayStr();          // 系统当前真实日期，用于高亮「今天」这一行
+
+    function rowsHTML() {
+      return calendarRows(t).map(function (r, k) {
+        var isToday = r.date === today;
+        var status = r.skipped ? '已跳过 · 不计入总数'
+          : (r.slotIndex >= 0 ? '第 ' + (r.slotIndex + 1) + ' 次打卡' : '—');
+        var label = periodic ? ('第 ' + (k + 1) + unit) : cnDateFull(r.date);
+        var why = r.skipped ? skipNoteOf(t, r.date) : '';
+        return '<div class="skip-row' + (r.skipped ? ' off' : '') + (isToday ? ' today' : '') +
+            '"' + (isToday ? ' data-today="1"' : '') + '>' +
+          '<div class="skip-info">' +
+            '<b>' + label + (isToday ? '<span class="skip-today-tag">今天</span>' : '') + '</b>' +
+            (periodic ? '<span>' + cnDateFull(r.date) + '</span>' : '') +
+            '<em>' + status + '</em>' +
+            (r.skipped
+              ? '<span class="skip-why' + (why ? '' : ' empty') + '">' +
+                (why ? '📝 ' + esc(why) : '还没有写跳过原因') + '</span>'
+              : '') +
+          '</div>' +
+          '<div class="skip-btns">' +
+            (r.skipped
+              ? '<button type="button" class="dchip" data-note="' + r.date + '">' +
+                (why ? '改原因' : '写原因') + '</button>'
+              : '') +
+            '<button type="button" class="dchip' + (r.skipped ? ' on' : '') + '" data-toggle="' + r.date + '">' +
+              (r.skipped ? '取消跳过' : '跳过这' + unit) +
+            '</button>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    var sub = weekly
+      ? '遇到假期、出差、生病等情况，可把某一周设为「跳过」：<br>' +
+        '那一周不用打卡，也不计入 ' + t.duration + ' 周总数，后面的课程顺延一周。'
+      : (monthly
+        ? '遇到特殊情况，可把某一月设为「跳过」：<br>' +
+          '那一月不用打卡，也不计入 ' + (t.longTerm ? '总数' : t.duration + ' 月总数') + '，后面的打卡顺延一个月。'
+        : '生病不舒服、那天特别忙很晚才回家，或是确实有正当理由，<br>' +
+          '都可以把这一天设为「跳过」：这一天不用打卡，也不计入 ' + t.duration +
+          ' 天总数，后面的打卡顺延一天，不用勉强自己。');
+
+    showModal(
+      '<h2>跳过某' + unit + ' 🚫</h2>' +
+      '<p class="modal-sub">' + sub + '</p>' +
+      '<div class="skip-list" id="skipList">' + rowsHTML() + '</div>' +
+      '<div class="modal-actions"><button class="btn primary" data-close>完成</button></div>'
+    );
+
+    var list = $('#skipList');
+
+    // 打开时自动滚动到今天那一行，省去手动查找
+    function scrollToToday(smooth) {
+      var row = list.querySelector('.skip-row.today');
+      if (row && row.scrollIntoView) {
+        row.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' });
+      }
+    }
+    if (list.querySelector('.skip-row.today')) {
+      if (window.requestAnimationFrame) requestAnimationFrame(function () { scrollToToday(false); });
+      else scrollToToday(false);
+    }
+
+    list.addEventListener('click', function (e) {
+      var nb = e.target.closest('[data-note]');
+      if (nb) { openSkipNote(t, nb.dataset.note, true); return; }   // 回到这里继续管理
+      var b = e.target.closest('[data-toggle]');
+      if (!b) return;
+      var date = b.dataset.toggle;
+      var i = t.skips.indexOf(date);
+      if (i >= 0) {
+        t.skips.splice(i, 1);
+        if (t.skipNotes) delete t.skipNotes[date];                  // 取消跳过时也清掉原因
+        toast('已取消跳过 ' + cnDate(date));
+      } else {
+        if (t.checkins[date]) delete t.checkins[date];              // 若那天已有打卡记录，一并移除
+        if (t.itemLog && t.itemLog[date]) delete t.itemLog[date];   // 组合打卡的子项勾选也清掉
+        t.skips.push(date);
+        toast('已跳过 ' + cnDate(date) + ' 这' + unit);
+      }
+      save();
+      var top = list.scrollTop;                 // 重绘后保持原来的滚动位置，避免"跳回顶部"
+      list.innerHTML = rowsHTML();
+      list.scrollTop = top;
+      render();
+    });
+  }
+
+  /* ==================== 跳过的原因（按天 / 按周通用） ==================== */
+  function openSkipNote(t, date, backToManager) {
+    var unit = unitWord(t);
+    var why = skipNoteOf(t, date);
+
+    function done(msg) {
+      save();
+      render();
+      toast(msg);
+      if (backToManager) openSkipManager(t);
+      else closeModal();
+    }
+
+    showModal(
+      '<h2>跳过原因 📝</h2>' +
+      '<p class="modal-sub">' + cnDateFull(date) + ' · ' + esc(t.name) + '<br>' +
+        '记下这' + unit + '为什么跳过，以后回头看就明白啦～（留空保存即清除原因）</p>' +
+      '<div class="field"><label>为什么跳过？</label>' +
+        '<textarea id="skipNoteInput" maxlength="120" placeholder="例如：那天感冒发烧，需要好好休息">' +
+        esc(why) + '</textarea></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>取消</button>' +
+        '<button class="btn primary" id="skipNoteSave">保存</button>' +
+      '</div>' +
+      (why ? '<button class="txt-btn dg" id="skipNoteDel" style="display:block;margin:16px auto 0">' +
+        '删除跳过原因</button>' : '')
+    );
+
+    $('#skipNoteSave').addEventListener('click', function () {
+      var v = $('#skipNoteInput').value.trim().slice(0, 120);
+      if (!t.skipNotes) t.skipNotes = {};
+      if (v) t.skipNotes[date] = v; else delete t.skipNotes[date];
+      done(v ? '已记下跳过原因 📝' : '已清除跳过原因');
+    });
+
+    var del = $('#skipNoteDel');
+    if (del) {
+      del.addEventListener('click', function () {
+        if (t.skipNotes) delete t.skipNotes[date];
+        done('已删除跳过原因');
+      });
+    }
+  }
+
+  /* ==================== 完成庆祝 ==================== */
+  function celebrateHTML(t) {
+    return '<div class="celebrate">' +
+      '<div class="big-emoji">🎉</div>' +
+      '<h2>太棒了！</h2>' +
+      '<p class="line">「' + esc(t.name) + '」<br>' + t.duration + ' ' + unitWord(t) + '，你都认真走完了。</p>' +
+      '<div class="money-box"><span class="lbl">完成任务奖励<br>难度 ' + t.stars + ' 星 × ' +
+        money(STAR_AMOUNT) + '</span>' +
+        '<span class="amt">' + money(starReward(t)) + '</span></div>' +
+      '<div class="reward-box"><div class="reward-label">给自己的奖励</div>' +
+        '<div class="reward-text">' + (t.reward ? esc(t.reward) : '还没想好？现在补上吧 🎁') + '</div></div>' +
+      '<div class="rest-tip" style="text-align:left">🌙 太棒了！已完成此周期，建议休息 1 周再开启下一轮打卡哦～</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" id="cReward">填写 / 修改奖励</button>' +
+        '<button class="btn primary" id="cClose">收到，谢谢自己 💛</button>' +
+      '</div></div>';
+  }
+
+  function showCelebrate(t, withConfetti) {
+    if (withConfetti) startConfetti();
+    showModal(celebrateHTML(t));
+    $('#cReward').addEventListener('click', function () { openReward(t, true); });
+    $('#cClose').addEventListener('click', function () {
+      closeModal();
+      // 完成的任务已经不属于「进行中」，切到「全部」让它留在眼前，
+      // 用户能直接看到奖励和休息建议，也不会错过其它习惯。
+      if (uiTab === 'active') { uiTab = 'all'; render(); }
+      toast('记得好好休息，1 周后再出发 🌙');
+    });
+  }
+  function celebrate(t) { showCelebrate(t, true); }
+  // 完成度从「未完成 → 已完成」时播放庆祝（避免重复触发）；返回是否已庆祝
+  function celebrateOnComplete(t, wasComplete, nowComplete) {
+    if (!nowComplete || wasComplete) return false;
+    setTimeout(function () { celebrate(t); }, 220);
+    return true;
+  }
+
+  /* ==================== 彩纸动画 ==================== */
+  var canvas = $('#confetti');
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+  var confettiRAF = null;
+  var W = 0, H = 0, DPR = 1;
+
+  function resizeCanvas() {
+    DPR = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', function () { if (confettiRAF) resizeCanvas(); });
+
+  function startConfetti() {
+    resizeCanvas();
+    var colors = ['#F2936B', '#FFC7A8', '#7FB69B', '#F7D794', '#E58FB1', '#8ECAE6'];
+    particles = [];
+    for (var i = 0; i < 170; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: -Math.random() * H * 0.6 - 20,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        vx: -1.3 + Math.random() * 2.6,
+        vy: 2 + Math.random() * 3.6,
+        rot: Math.random() * Math.PI * 2,
+        vr: -0.14 + Math.random() * 0.28,
+        color: colors[i % colors.length]
+      });
+    }
+    if (confettiRAF) cancelAnimationFrame(confettiRAF);
+    var start = performance.now();
+
+    function loop(now) {
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.vy += 0.035;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.92;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      particles = particles.filter(function (p) { return p.y < H + 60; });
+      if (particles.length && now - start < 7000) {
+        confettiRAF = requestAnimationFrame(loop);
+      } else {
+        ctx.clearRect(0, 0, W, H);
+        confettiRAF = null;
+      }
+    }
+    confettiRAF = requestAnimationFrame(loop);
+  }
+
+  /* ==================== 打卡粒子爆破 ====================
+     在某个坐标点喷射一圈粒子（点击按钮位置 / 卡片中央），约 1 秒内散开淡出。
+     与上面的彩纸雨彼此独立、各自的画布与循环，互不干扰。 */
+  var burstCanvas = $('#burst');
+  var bctx = burstCanvas ? burstCanvas.getContext('2d') : null;
+  var burstParticles = [];
+  var burstRAF = null;
+  var BW = 0, BH = 0, BDPR = 1;
+
+  function resizeBurst() {
+    if (!burstCanvas) return;
+    BDPR = window.devicePixelRatio || 1;
+    BW = window.innerWidth;
+    BH = window.innerHeight;
+    burstCanvas.width = Math.floor(BW * BDPR);
+    burstCanvas.height = Math.floor(BH * BDPR);
+    bctx.setTransform(BDPR, 0, 0, BDPR, 0, 0);
+  }
+  window.addEventListener('resize', function () { if (burstRAF) resizeBurst(); });
+
+  function fireBurst(x, y) {
+    if (!bctx) return;
+    resizeBurst();
+    var colors = ['#F2936B', '#FFC7A8', '#7FB69B', '#F7D794', '#E58FB1', '#8ECAE6', '#EFAE45'];
+    var n = 66;
+    for (var i = 0; i < n; i++) {
+      var ang = (Math.PI * 2 * i / n) + Math.random() * 0.32;   // 放射状均分 + 轻微抖动
+      var spd = 3.2 + Math.random() * 5.6;
+      burstParticles.push({
+        x: x, y: y,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd,
+        g: 0.16 + Math.random() * 0.12,
+        size: 3 + Math.random() * 5,
+        rot: Math.random() * Math.PI,
+        vr: -0.3 + Math.random() * 0.6,
+        life: 1,
+        color: colors[i % colors.length]
+      });
+    }
+    if (burstRAF) return;   // 已有循环在跑，新粒子由同一循环带动
+    function loop() {
+      bctx.clearRect(0, 0, BW, BH);
+      for (var i = 0; i < burstParticles.length; i++) {
+        var p = burstParticles[i];
+        p.vy += p.g;
+        p.vx *= 0.985;
+        p.vy *= 0.985;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.life -= 0.018;
+        bctx.save();
+        bctx.globalAlpha = Math.max(0, p.life);
+        bctx.translate(p.x, p.y);
+        bctx.rotate(p.rot);
+        bctx.fillStyle = p.color;
+        bctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.62);
+        bctx.restore();
+      }
+      burstParticles = burstParticles.filter(function (p) { return p.life > 0 && p.y < BH + 80; });
+      if (burstParticles.length) {
+        burstRAF = requestAnimationFrame(loop);
+      } else {
+        bctx.clearRect(0, 0, BW, BH);
+        burstRAF = null;
+      }
+    }
+    burstRAF = requestAnimationFrame(loop);
+  }
+
+  /* ==================== 音效（Web Audio 合成 + HTML5 Audio · 预留接口） ====================
+     · 默认用 Web Audio 合成一段清脆的成就铃声，无需任何音频文件即可出声。
+     · 若把 checkout.mp3 / level-up.mp3 放到本 HTML 同级目录，则自动改用真实音效。
+     · 浏览器要求「用户手势」后才能出声：打卡本身就是点击，故可直接播放。
+     调试：控制台执行 habitSound.play('levelup') 试听 / habitSound.enable(false) 静音。 */
+  var SOUND_ON = true;
+  var SOUND_SRC = { checkin: 'checkout.mp3', levelup: 'level-up.mp3' };
+  var soundEls = {};          // 文件存在时的 <audio> 元素
+  var fileState = {};         // name -> 'ready' | 'missing'
+  var audioCtx = null;
+
+  function ensureCtx() {
+    if (audioCtx) return audioCtx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { audioCtx = new AC(); } catch (e) { audioCtx = null; }
+    return audioCtx;
+  }
+  // 首次交互时解锁音频上下文（移动端 / 新版桌面浏览器的自动播放策略）
+  function unlockAudio() {
+    var c = ensureCtx();
+    if (c && c.state === 'suspended') { try { c.resume(); } catch (e) { /* 忽略 */ } }
+  }
+  document.addEventListener('pointerdown', unlockAudio);
+  document.addEventListener('keydown', unlockAudio);
+
+  // 无外部音频文件时的合成铃声：checkin 两连音 / levelup 上行琶音
+  function synthSound(name) {
+    var ctx = ensureCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) { /* 忽略 */ } }
+    var seq = (name === 'levelup')
+      ? [[523.25, 0], [659.25, 0.09], [783.99, 0.18], [1046.50, 0.30]]   // C5 E5 G5 C6
+      : [[987.77, 0], [1318.51, 0.085]];                                 // B5 → E6 清脆两音
+    var dur = (name === 'levelup') ? 0.36 : 0.24;
+    var t0 = ctx.currentTime + 0.01;
+    seq.forEach(function (p) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      var t = t0 + p[1];
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(p[0], t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.22, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + dur + 0.03);
+    });
+  }
+
+  function playSound(name) {
+    if (!SOUND_ON) return;
+    name = name || 'checkin';
+
+    // 已知文件不存在 → 直接合成
+    if (fileState[name] === 'missing') { synthSound(name); return; }
+
+    // 若提供了 checkout.mp3 / level-up.mp3，则优先播放文件
+    if (SOUND_SRC[name] && typeof Audio !== 'undefined') {
+      try {
+        var a = soundEls[name];
+        if (!a) {
+          a = new Audio(SOUND_SRC[name]);
+          a.preload = 'auto';
+          a.volume = 0.7;
+          a.addEventListener('canplaythrough', function () { fileState[name] = 'ready'; });
+          a.addEventListener('error', function () { fileState[name] = 'missing'; });
+          soundEls[name] = a;
+        }
+        a.currentTime = 0;
+        var pr = a.play();
+        // 文件缺失 / 被拦截时，退回合成铃声，保证一定「听得到」
+        if (pr && pr['catch']) pr['catch'](function () { fileState[name] = 'missing'; synthSound(name); });
+        return;
+      } catch (e) { fileState[name] = 'missing'; }
+    }
+    synthSound(name);
+  }
+
+  window.habitSound = {
+    play: playSound,
+    enable: function (on) { SOUND_ON = !!on; },
+    sources: SOUND_SRC
+  };
+
+  /* ==================== 打卡瞬时反馈：爆破 + 弹跳 + 音效 ==================== */
+  function cardElById(id) {
+    return $('#list') ? $('#list').querySelector('.card[data-id="' + id + '"]') : null;
+  }
+
+  // 卡片轻微弹跳（优先 Web Animations，失败退回 CSS 类）
+  function pulseCard(card) {
+    if (!card) return;
+    if (card.animate) {
+      card.animate([
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.035)' },
+        { transform: 'scale(.992)' },
+        { transform: 'scale(1)' }
+      ], { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+    } else {
+      card.classList.add('pulse');
+      setTimeout(function () { card.classList.remove('pulse'); }, 620);
+    }
+  }
+
+  // 打卡成功瞬间：在点按位置（或卡片中央）喷射粒子 + 卡片弹跳 + 播放成就音效
+  function checkinFeedback(t, ev, sound) {
+    var card = cardElById(t.id);
+    var x, y;
+    if (ev && typeof ev.clientX === 'number' && (ev.clientX || ev.clientY)) {
+      x = ev.clientX; y = ev.clientY;                 // 点按按钮位置
+    } else if (card) {
+      var r = card.getBoundingClientRect();           // 卡片中央
+      x = r.left + r.width / 2;
+      y = r.top + Math.min(r.height / 2, 130);
+    } else {                                          // 屏幕中央
+      x = window.innerWidth / 2;
+      y = window.innerHeight / 2;
+    }
+    fireBurst(x, y);
+    playSound(sound || 'checkin');
+    pulseCard(card);
+  }
+
+  /* ==================== 删除确认 ==================== */
+  function confirmDelete(t) {
+    showModal(
+      '<h2>确定删除这个任务？</h2>' +
+      '<p class="modal-sub">「' + esc(t.name) + '」和它的所有打卡记录都会被删除，无法恢复。</p>' +
+      '<div class="modal-actions">' +
+        '<button class="btn ghost" data-close>再想想</button>' +
+        '<button class="btn primary" id="dYes" style="background:#D98080;box-shadow:none">删除</button>' +
+      '</div>'
+    );
+    $('#dYes').addEventListener('click', function () {
+      state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
+      delete expanded[t.id];
+      save();
+      closeModal();
+      render();
+      toast('已删除');
+    });
+  }
+
+  /* ==================== 汇总明细：累计奖励 / 已完成任务 ==================== */
+  function detailRowHTML(t, meta, amount) {
+    return '<div class="detail-row">' +
+      '<div class="detail-main">' +
+        '<b>' + esc(t.name) + '</b>' +
+        '<em>' + meta + '</em>' +
+        (t.reward ? '<span class="detail-gift">🎁 ' + esc(t.reward) + '</span>' : '') +
+      '</div>' +
+      '<span class="detail-amt">' + money(amount) + '</span>' +
+    '</div>';
+  }
+  function showDetailModal(title, sub, body) {
+    showModal(
+      '<h2>' + title + '</h2>' +
+      '<p class="modal-sub">' + sub + '</p>' +
+      body +
+      '<div class="modal-actions"><button class="btn primary" data-close>知道了</button></div>'
+    );
+  }
+
+  function openRewardDetail() {
+    var done = state.tasks.filter(function (t) { return earnedOf(t) > 0; }).sort(byOrder);
+    var total = done.reduce(function (sum, t) { return sum + earnedOf(t); }, 0);
+    var body;
+    if (!done.length) {
+      body = '<div class="hint">还没有完成的任务，完成后奖励会自动记在这里 🌱</div>';
+    } else {
+      body = '<div class="money-box"><span class="lbl">共 ' + done.length + ' 个已完成任务</span>' +
+        '<span class="amt">' + money(total) + '</span></div>' +
+        '<div class="detail-list">' + done.map(function (t) {
+          return detailRowHTML(t, t.duration + ' ' + unitWord(t) + ' · 难度 ' + t.stars + ' 星（' +
+            money(STAR_AMOUNT) + '/星）', earnedOf(t));
+        }).join('') + '</div>';
+    }
+    showDetailModal('累计获得奖励 💰',
+      '完成整个任务才会发放奖励：难度星级 × ' + money(STAR_AMOUNT), body);
+  }
+
+  function openDoneDetail() {
+    var done = state.tasks.filter(isComplete).sort(byOrder);
+    var body;
+    if (!done.length) {
+      body = '<div class="hint">还没有完成的任务，慢慢来～ 🌱</div>';
+    } else {
+      body = '<div class="detail-list">' + done.map(function (t) {
+        var last = lastCheckinDate(t);
+        return detailRowHTML(t, cnDate(t.startDate) + ' 开始 · 共 ' + t.duration + ' ' + unitWord(t) +
+          (last ? ' · 完成于 ' + cnDate(last) : ''), starReward(t));
+      }).join('') + '</div>';
+    }
+    showDetailModal('已完成任务 🏁',
+      '走完整个周期的任务都在这里（共 ' + done.length + ' 个）', body);
+  }
+
+  /* ==================== 轮次记录（同一习惯的多次进行） ==================== */
+  var ROUND_LABEL = { active: '进行中', upcoming: '未开始', done: '已完成 🎉', expired: '未完成' };
+  // 某一轮的打卡日历（只读展示，用在轮次记录弹层里）
+  function roundChipsHTML(t) {
+    var today = todayStr();
+    if (isPeriodic(t)) {
+      var unit = unitWord(t);
+      return calendarRows(t).map(function (r) {
+        var d = r.date;
+        if (r.skipped) {
+          return '<span class="day skip"><span class="n">跳过</span>' +
+            '<span class="w">' + cnShort(d) + '</span></span>';
+        }
+        var rec = t.checkins[d];
+        var cls = 'day' + (rec ? ' on' : '') + (d === today ? ' today' : '') + (d > today ? ' future' : '');
+        return '<span class="' + cls + '"><span class="n">第' + (r.slotIndex + 1) + unit + '</span>' +
+          '<span class="w">' + (rec ? '✓' : cnShort(d)) + '</span></span>';
+      }).join('');
+    }
+    return calendarRows(t).map(function (r) {
+      var d = r.date;
+      if (r.skipped) {
+        return '<span class="day skip"><span class="n">跳过</span>' +
+          '<span class="w">' + cnShort(d) + '</span></span>';
+      }
+      var rec = t.checkins[d];
+      var perfect = !!(rec && !isPeriodic(t) && isPerfectDay(d));   // 大满贯之日：金黄底
+      var cls = 'day' + (rec ? ' on' : '') + (perfect ? ' perfect' : '') +
+        (d === today ? ' today' : '') + (d > today ? ' future' : '');
+      return '<span class="' + cls + '"><span class="n">' + cnShort(d) + '</span>' +
+        '<span class="w">' + (rec ? '✓' : cnWeek(d)) + '</span></span>';
+    }).join('');
+  }
+  function roundNotesHTML(t) {
+    return periodsOf(t).filter(function (d) {
+      return t.checkins[d] && t.checkins[d].note;
+    }).reverse().map(function (d) {
+      var rec = t.checkins[d];
+      return '<div class="note-item"><span class="d">' + cnShort(d) + ' ' + cnTime(rec.time) + '</span>' +
+        '<span>' + esc(rec.note) + '</span></div>';
+    }).join('');
+  }
+  function openRounds(t) {
+    var rounds = seriesTasks(t);            // 第 1 轮在前
+    var doneRounds = rounds.filter(isComplete).length;
+    var totalCheck = rounds.reduce(function (s, r) { return s + checkedCount(r); }, 0);
+    var blocks = rounds.slice().reverse().map(function (r) {   // 最近的轮次排在最上面
+      var st = statusOf(r);
+      var done = checkedCount(r);
+      var earned = earnedOf(r);
+      return '<div class="round-block">' +
+        '<div class="round-head"><b>第 ' + (r.roundNo || 1) + ' 轮</b>' +
+          '<span class="badge ' + BADGE[st][1] + '">' + ROUND_LABEL[st] + '</span></div>' +
+        '<div class="round-meta">' + cnDate(r.startDate) + ' 开始 · ' +
+          (r.longTerm ? '长期循环 ♾️' : '共 ' + r.duration + ' ' + unitWord(r)) +
+          (isWeekly(r) ? ' · 每' + WEEK[r.weekday] : '') +
+          (isMonthly(r) ? ' · 每月 ' + r.monthDay + ' 号' : '') +
+          ' · 已打卡 ' + done + (r.longTerm ? ' 次' : '/' + r.duration) +
+          (earned > 0 ? ' · 奖励 ' + money(earned) : '') + '</div>' +
+        '<div class="days round-days">' + roundChipsHTML(r) + '</div>' +
+        (roundNotesHTML(r) ? '<div class="notes">' + roundNotesHTML(r) + '</div>' : '') +
+        '</div>';
+    }).join('');
+    var head = '<div class="money-box"><span class="lbl">共进行 ' + rounds.length + ' 轮 · 已完成 ' +
+      doneRounds + ' 轮</span><span class="amt">' + totalCheck + ' 次打卡</span></div>';
+    showDetailModal('轮次记录 🔁', esc(t.name) + ' · 当前是第 ' + (t.roundNo || 1) + ' 轮',
+      head + '<div class="round-list">' + blocks + '</div>');
+  }
+
+  /* ==================== 事件绑定 ==================== */
+  $('#list').addEventListener('click', function (e) {
+    var el = e.target.closest('[data-action]');
+    if (!el) return;
+    var t = findTask(el.dataset.id);
+    if (!t) return;
+    var action = el.dataset.action;
+
+    if (action === 'checkin' || action === 'day') {
+      juicyPress(el);                              // 按压缩放：更爽的即时反馈
+      if (isComposite(t)) openChecklist(t, el.dataset.date);
+      else openCheckin(t, el.dataset.date);
+    } else if (action === 'item') {
+      juicyPress(el);
+      toggleItem(t, el.dataset.date, el.dataset.item, e);
+    } else if (action === 'items') {
+      openEditItems(t);
+    } else if (action === 'skip') {
+      openSkipManager(t);
+    } else if (action === 'skipnote') {
+      openSkipNote(t, el.dataset.date, false);
+    } else if (action === 'duration') {
+      openAdjustDuration(t);
+    } else if (action === 'toggle') {
+      expanded[t.id] = !expanded[t.id];
+      render();
+    } else if (action === 'reward') {
+      openReward(t, false);
+    } else if (action === 'stars') {
+      openEditStars(t);
+    } else if (action === 'again') {
+      openNewTask(t);
+    } else if (action === 'rounds') {
+      openRounds(t);
+    } else if (action === 'del') {
+      confirmDelete(t);
+    } else if (action === 'more') {
+      openMoreMenu(t);
+    }
+  });
+
+  /* ==================== 双击标题：内联改名（最多 3 次） ==================== */
+  $('#list').addEventListener('dblclick', function (e) {
+    var title = e.target.closest('.card-title');
+    if (!title || title.dataset.editing === '1') return;
+    var t = findTask(title.dataset.id);
+    if (t) startRename(t, title);
+  });
+
+  function startRename(t, title) {
+    var left = RENAME_MAX - t.renameCount;
+    if (left <= 0) { toast('修改次数已达上限（0/' + RENAME_MAX + '）'); return; }
+    title.dataset.editing = '1';
+
+    var orig = t.name;
+    var box = document.createElement('div');
+    box.className = 'rename-box';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'rename-input';
+    input.maxLength = 30;
+    input.value = orig;
+    var hint = document.createElement('div');
+    hint.className = 'rename-hint';
+    hint.textContent = '还可修改 ' + left + ' 次';
+    box.appendChild(input);
+    box.appendChild(hint);
+    title.textContent = '';
+    title.appendChild(box);
+    input.focus();
+    input.select();
+
+    var done = false;
+    function finish(apply) {
+      if (done) return;
+      done = true;
+      var val = input.value.trim();
+      if (apply) {
+        if (!val) {
+          toast('名称不能为空');
+        } else if (val !== orig) {
+          t.name = val;
+          t.renameCount += 1;
+          save();
+          toast('名称已更新，还可修改 ' + (RENAME_MAX - t.renameCount) + ' 次');
+        }
+      }
+      render();
+    }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', function () { finish(true); });
+    input.addEventListener('dblclick', function (ev) { ev.stopPropagation(); });
+  }
+
+  /* ==================== 卡片拖拽排序 ==================== */
+  var drag = null;
+
+  function commitOrder() {
+    var cards = $('#list').querySelectorAll('.card');
+    var ids = Array.prototype.map.call(cards, function (c) { return c.dataset.id; });
+    if (ids.length < 2) return;
+    var visible = {};
+    ids.forEach(function (id) { visible[id] = true; });
+    var picked = ids.map(findTask);
+    var it = 0;
+    // 只重排当前可见任务，未显示的任务保持原有相对位置
+    var reordered = state.tasks.slice().sort(byOrder).map(function (t) {
+      return visible[t.id] ? picked[it++] : t;
+    });
+    reordered.forEach(function (t, i) { t.order = i; });
+    state.tasks = reordered;
+    save();
+  }
+
+  function onDragMove(e) {
+    if (!drag) return;
+    if (!drag.active) {
+      if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 6) return;
+      drag.active = true;
+      drag.card.classList.add('dragging');
+    }
+    e.preventDefault();
+    drag.card.style.pointerEvents = 'none';
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    var target = (under && under.closest) ? under.closest('.card') : null;
+    if (target && target !== drag.card && target.parentNode === drag.card.parentNode) {
+      var r = target.getBoundingClientRect();
+      var cx = r.left + r.width / 2;
+      var cy = r.top + r.height / 2;
+      var before;
+      if (Math.abs(e.clientY - cy) > r.height * 0.35) before = e.clientY < cy; // 跨行：按上下
+      else before = e.clientX < cx;                                            // 同行：按左右
+      target.parentNode.insertBefore(drag.card, before ? target : target.nextSibling);
+    }
+  }
+
+  function onDragEnd() {
+    if (!drag) return;
+    var moved = drag.active;
+    drag.card.classList.remove('dragging');
+    drag.card.style.pointerEvents = '';
+    drag = null;
+    if (moved) { commitOrder(); toast('顺序已保存'); }
+  }
+
+  $('#list').addEventListener('pointerdown', function (e) {
+    var handle = e.target.closest('.drag-handle');
+    if (!handle || (e.button !== undefined && e.button !== 0)) return;
+    var card = handle.closest('.card');
+    if (!card) return;
+    e.preventDefault();
+    drag = { card: card, sx: e.clientX, sy: e.clientY, active: false };
+    if (handle.setPointerCapture) { try { handle.setPointerCapture(e.pointerId); } catch (err) {} }
+  });
+  document.addEventListener('pointermove', onDragMove, { passive: false });
+  document.addEventListener('pointerup', onDragEnd);
+  document.addEventListener('pointercancel', onDragEnd);
+
+  /* ==================== 组合清单：子项拖拽排序 ==================== */
+  var itemDrag = null;
+
+  // 依照拖动后的新顺序重排数组（按 id 匹配）
+  function reorderById(arr, ids) {
+    var rank = {};
+    ids.forEach(function (id, i) { rank[id] = i; });
+    arr.sort(function (a, b) {
+      var ra = rank.hasOwnProperty(a.id) ? rank[a.id] : 9999;
+      var rb = rank.hasOwnProperty(b.id) ? rank[b.id] : 9999;
+      return ra - rb;
+    });
+  }
+
+  function startItemDrag(box, row, onDrop, e) {
+    if (!box || !row || (e.button !== undefined && e.button !== 0)) return;
+    e.preventDefault();
+    itemDrag = { box: box, row: row, onDrop: onDrop, sx: e.clientX, sy: e.clientY, active: false };
+    var handle = row.querySelector('.cli-drag');
+    if (handle && handle.setPointerCapture) {
+      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+  }
+
+  function onItemDragMove(e) {
+    if (!itemDrag) return;
+    if (!itemDrag.active) {
+      if (Math.abs(e.clientX - itemDrag.sx) + Math.abs(e.clientY - itemDrag.sy) < 6) return;
+      itemDrag.active = true;
+      itemDrag.row.classList.add('item-dragging');
+    }
+    e.preventDefault();
+    itemDrag.row.style.pointerEvents = 'none';
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    var target = (under && under.closest) ? under.closest('[data-row]') : null;
+    if (target && target !== itemDrag.row && target.parentNode === itemDrag.row.parentNode) {
+      var r = target.getBoundingClientRect();
+      var cy = r.top + r.height / 2;
+      target.parentNode.insertBefore(itemDrag.row, e.clientY < cy ? target : target.nextSibling);
+    }
+  }
+
+  function onItemDragEnd() {
+    if (!itemDrag) return;
+    var d = itemDrag;
+    var moved = d.active;
+    d.row.classList.remove('item-dragging');
+    d.row.style.pointerEvents = '';
+    itemDrag = null;
+    if (!moved) return;
+    var ids = Array.prototype.map.call(d.box.querySelectorAll('[data-row]'), function (n) {
+      return n.dataset.row;
+    });
+    if (typeof d.onDrop === 'function') d.onDrop(ids);
+  }
+
+  document.addEventListener('pointermove', onItemDragMove, { passive: false });
+  document.addEventListener('pointerup', onItemDragEnd);
+  document.addEventListener('pointercancel', onItemDragEnd);
+
+  // 打卡清单（卡片内 / 弹层）拖拽结束后：写回任务并持久化
+  function checklistDrop(t) {
+    return function (ids) {
+      reorderById(t.items, ids);
+      save();
+      toast('清单顺序已保存');
+      render();
+    };
+  }
+
+  // 卡片内清单：委托监听（卡片会整体重绘，需绑定在常驻的 #list 上）
+  $('#list').addEventListener('pointerdown', function (e) {
+    var handle = e.target.closest('.cli-drag');
+    if (!handle) return;
+    var row = handle.closest('[data-row]');
+    if (!row) return;
+    var card = handle.closest('.card');
+    var box = row.parentNode;
+    var t = card ? findTask(card.dataset.id) : null;
+    if (!t || !box) return;
+    startItemDrag(box, row, checklistDrop(t), e);
+  });
+
+  $('#tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]');
+    if (!b) return;
+    uiTab = b.dataset.tab;
+    render();
+  });
+
+  /* 汇总卡片：单击查看明细 */
+  $('#rewardSum').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-sum]');
+    if (!b) return;
+    if (b.dataset.sum === 'reward') openRewardDetail();
+    else if (b.dataset.sum === 'done') openDoneDetail();
+  });
+
+  $('#addBtn').addEventListener('click', function () { openNewTask(null); });
+
+  /* ==================== 备份：导出 / 导入 ==================== */
+  $('#exportBtn').addEventListener('click', function () {
+    var data = JSON.stringify({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      tasks: state.tasks,
+      chests: state.chests
+    }, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '习惯打卡备份-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    toast('已导出备份文件');
+  });
+
+  $('#importBtn').addEventListener('click', function () { $('#importFile').click(); });
+
+  $('#importFile').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var d = JSON.parse(reader.result);
+        if (!d || !Array.isArray(d.tasks)) throw new Error('bad format');
+        adoptTasks(d.tasks);
+        if (d.chests) state.chests = normalizeChests(d.chests);
+        save();
+        render();
+        toast('导入成功，共 ' + state.tasks.length + ' 个任务');
+      } catch (err) {
+        toast('导入失败：文件格式不正确');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  /* ==================== 启动 ==================== */
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
